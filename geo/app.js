@@ -797,30 +797,28 @@ function openBrand(brandId,vis){
         ${sliSkpi('Average ticket',fmtAED(s.avgTicket))}
         ${sliSkpi('City contribution',contrib+'%')}
       </div>
-      <div class="sli-detail-body">
-        <div class="sli-two-col">
-          <div class="sli-card">
-            <h4>Performance &amp; market position</h4>
-            <div class="sli-rows">
-              <div class="sli-row"><span>City rank by spend</span><b>#${rank} of ${listShops.length}</b></div>
-              <div class="sli-row"><span>6-month change</span><b class="${deltaSign?'pos':'neg'}">${deltaSign?'+':''}${s.delta}%</b></div>
-              <div class="sli-row"><span>Primary customer segment</span><b>${s.segment}</b></div>
-              <div class="sli-row"><span>Most common transaction</span><b>${s.txnType}</b></div>
-            </div>
-          </div>
-          <div class="sli-card">
-            <h4>Gender distribution</h4>
-            <div class="sli-gbar">
-              <div style="width:${s.male}%;background:var(--green)">${s.male>20?s.male+'%':''}</div>
-              <div style="width:${100-s.male}%;background:#C8E6DC">${100-s.male>20?(100-s.male)+'%':''}</div>
-            </div>
-            <div class="sli-glab"><span>Male ${s.male}%</span><span>Female ${100-s.male}%</span></div>
+      <div class="sli-two-col">
+        <div class="sli-card">
+          <h4>Performance &amp; market position</h4>
+          <div class="sli-rows">
+            <div class="sli-row"><span>City rank by spend</span><b>#${rank} of ${listShops.length}</b></div>
+            <div class="sli-row"><span>6-month change</span><b class="${deltaSign?'pos':'neg'}">${deltaSign?'+':''}${s.delta}%</b></div>
+            <div class="sli-row"><span>Primary customer segment</span><b>${s.segment}</b></div>
+            <div class="sli-row"><span>Most common transaction</span><b>${s.txnType}</b></div>
           </div>
         </div>
         <div class="sli-card">
-          <h4>Age distribution</h4>
-          ${ageRows(s.age)}
+          <h4>Gender distribution</h4>
+          <div class="sli-gbar">
+            <div style="width:${s.male}%;background:#147D64"></div>
+            <div style="width:${100-s.male}%;background:#8BD2B7"></div>
+          </div>
+          <div class="sli-glab"><span>Male ${s.male}%</span><span>Female ${100-s.male}%</span></div>
         </div>
+      </div>
+      <div class="sli-card">
+        <h4>Age distribution</h4>
+        ${ageRows(s.age)}
       </div>`;
   }
 
