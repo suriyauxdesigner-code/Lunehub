@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lune — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="geo/styles.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-name">Lune</div>
+      <span class="collapse" title="Collapse">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+      </span>
+    </div>
+    <nav class="nav">
+      <a class="nav-item"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Overview</a>
+      <a class="nav-item nav-section"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7l8-4 8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 17l8 4 8-4"/></svg>Enrichment</a>
+      <a class="nav-item nav-sub">Transactions</a>
+      <a class="nav-item nav-sub">API keys</a>
+      <a class="nav-item nav-section"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Analytics</a>
+      <a class="nav-item nav-sub active">Dashboard</a>
+      <a class="nav-item nav-sub" href="Geolocation Analytics.html">Geography</a>
+      <a class="nav-item nav-sub" href="Brand Explorer.html">Brands</a>
+      <a class="nav-item nav-sub" href="Categories Explorer.html">Categories</a>
+      <a class="nav-item nav-section"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Billing</a>
+      <a class="nav-item"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v6h6"/></svg>Documentation<span class="ext"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg></span></a>
+      <a class="nav-item"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.3 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h5l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5c.1-.3.1-.7.1-1z"/></svg>Settings</a>
+      <a class="nav-item"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12a8 8 0 0 1 16 0v5a2 2 0 0 1-2 2h-1v-6h3M4 12v5a2 2 0 0 0 2 2h1v-6H4"/></svg>Contact us</a>
+    </nav>
+    <div class="side-foot">
+      <div class="user">
+        <div class="avatar">AS</div>
+        <div><div class="nm">Alexandre Soued</div><div class="pl">Basic plan</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1>Dashboard</h1>
+        <div class="sub">Brand and Category spend analytics</div>
+      </div>
+      <div class="controls">
+        <div class="pill-select"><span class="flag"></span>AED <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="pill-select"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Last 6 months <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="pill-select"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V4l1-1 14 0M4 9h13l-2 4 2 4H4"/></svg>All Countries <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- Spend overview KPIs -->
+      <div>
+        <h3 class="dash-section-h">Spend Analytics</h3>
+        <p class="dash-section-sub">Across all enriched brands · last 6 months</p>
+        <div class="kpi-row">
+          <div class="kpi"><div class="k"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Total spend</div><div class="v" id="kpi-spend">—</div><div class="d">▲ 8.4% vs prev</div></div>
+          <div class="kpi"><div class="k"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h14l-3-3M21 17H7l3 3"/></svg>Transactions</div><div class="v" id="kpi-txns">—</div><div class="d">▲ 5.1% vs prev</div></div>
+          <div class="kpi"><div class="k"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 5a3 3 0 0 1 0 6M21 20a6 6 0 0 0-4-5.6"/></svg>Customers</div><div class="v" id="kpi-cust">—</div><div class="d">▲ 3.7% vs prev</div></div>
+        </div>
+      </div>
+
+      <!-- Geolocation widget (entry point to full page) -->
+      <div>
+        <div class="widget-label"><h3>Geography</h3><span>where spend happens</span></div>
+        <a class="geo-widget" href="Geolocation Analytics.html">
+          <div class="gw-map" id="gw-map"><div class="gw-pill">Top regions by spend</div></div>
+          <div class="gw-body">
+            <div class="gw-head">
+              <h3>Geolocation Analytics <span class="tag-new">New</span></h3>
+              <span class="arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
+            </div>
+            <p class="gw-desc">See exactly where brand spend happens on a live world map — ranked by what's in view, drillable to individual stores, with demographic and channel filters.</p>
+            <div class="gw-stat"><span class="v" id="gw-total">—</span><small id="gw-sub">—</small></div>
+            <div class="gw-top" id="gw-top"></div>
+            <span class="gw-cta">Open geolocation analytics <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="geo/data.js"></script>
+<script src="geo/widget.js"></script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lune — Geolocation Analytics</title>
+<meta name="ext-resource-dependency" content="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json" data-resource-id="worldAtlas" />
+<template id="__bundler_thumbnail" data-bg-color="#EAEEF1">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#EAEEF1"/>
+    <circle cx="600" cy="370" r="240" fill="none" stroke="#C7D0D6" stroke-width="10"/>
+    <path d="M600 215c-66 0-120 52-120 118 0 88 120 222 120 222s120-134 120-222c0-66-54-118-120-118z" fill="#13A07B"/>
+    <circle cx="600" cy="333" r="46" fill="#fff"/>
+    <g fill="#0C2B26"><circle cx="360" cy="250" r="20"/><circle cx="840" cy="300" r="20"/><circle cx="430" cy="520" r="20"/><circle cx="780" cy="540" r="20"/></g>
+    <text x="600" y="700" font-family="Figtree, sans-serif" font-size="46" font-weight="600" fill="#0C2B26" text-anchor="middle">Geolocation Analytics</text>
+  </svg>
+</template>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<link rel="stylesheet" href="geo/styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ Sidebar ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-name">Lune</div>
+      <span class="collapse" title="Collapse">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+      </span>
+    </div>
+    <nav class="nav">
+      <a class="nav-item"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Overview</a>
+      <a class="nav-item nav-section"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7l8-4 8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 17l8 4 8-4"/></svg>Enrichment</a>
+      <a class="nav-item nav-sub">Transactions</a>
+      <a class="nav-item nav-sub">API keys</a>
+      <a class="nav-item nav-section"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Analytics</a>
+      <a class="nav-item nav-sub" href="Dashboard.html">Dashboard</a>
+      <a class="nav-item nav-sub active">Geography</a>
+      <a class="nav-item nav-sub" href="Brand Explorer.html">Brands</a>
+      <a class="nav-item nav-sub" href="Categories Explorer.html">Categories</a>
+      <a class="nav-item nav-section"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Billing</a>
+      <a class="nav-item"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v6h6"/></svg>Documentation<span class="ext"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg></span></a>
+      <a class="nav-item"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.3 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h5l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5c.1-.3.1-.7.1-1z"/></svg>Settings</a>
+      <a class="nav-item"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12a8 8 0 0 1 16 0v5a2 2 0 0 1-2 2h-1v-6h3M4 12v5a2 2 0 0 0 2 2h1v-6H4"/></svg>Contact us</a>
+    </nav>
+    <div class="side-foot">
+      <div class="user">
+        <div class="avatar">AS</div>
+        <div><div class="nm">Alexandre Soued</div><div class="pl">Basic plan</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ Main ============ -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <a class="crumb" href="Dashboard.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>Dashboard</a>
+        <h1>Geolocation Analytics</h1>
+        <div class="sub">Where customer spend happens — live by map view</div>
+      </div>
+      <div class="controls">
+        <div class="pill-select"><span class="flag"></span>AED <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="pill-select"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Last 6 months <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="pill-select"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V4l1-1 14 0M4 9h13l-2 4 2 4H4"/></svg>All Countries <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ============ GEOLOCATION ANALYTICS ============ -->
+      <section class="geo" id="geo">
+        <div class="geo-head">
+          <div class="titles">
+            <h2>Geolocation Analytics <span class="tag-new">New</span></h2>
+            <p>Where brand spend actually happens. The leaderboard ranks the top 30 brands <b>live by what's in view</b> &mdash; pan and zoom anywhere worldwide.</p>
+          </div>
+        </div>
+
+        <!-- toolbar: metric tabs (left) + filters (right) -->
+        <div class="geo-toolbar">
+          <div class="tb-row">
+            <div class="tb-left">
+              <div class="seg" id="metric-seg">
+                <button data-m="spend" class="on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Spend</button>
+                <button data-m="txns"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h14l-3-3M21 17H7l3 3"/></svg>Transactions</button>
+                <button data-m="customers"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 5a3 3 0 0 1 0 6M21 20a6 6 0 0 0-4-5.6"/></svg>Customers</button>
+                <button data-m="avgTicket"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></svg>Avg ticket</button>
+              </div>
+              <div class="why" id="why-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
+                For the bank
+                <div class="why-pop" id="why-pop">
+                  <h4>What this unlocks for the bank</h4>
+                  <p>Cardholder transactions carry merchant location. Aggregated, that becomes a live map of where, who and how much &mdash; insight banks can monetise or act on.</p>
+                  <ul>
+                    <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><span><b>Merchant acquiring leads</b> &mdash; spot high-volume stores not yet on the bank's terminals.</span></li>
+                    <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><span><b>Co-brand &amp; cashback targeting</b> &mdash; rank brands by spend in any catchment.</span></li>
+                    <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><span><b>Branch &amp; ATM placement</b> &mdash; overlay customer spend density.</span></li>
+                    <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><span><b>Demographic slicing</b> &mdash; gender, age, segment &amp; channel per location.</span></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="tb-action" id="filters-action"></div>
+          </div>
+          <div class="tb-chips" id="filters"></div>
+        </div>
+
+        <!-- inline category + brand quick-filters -->
+        <div class="inline-filters" id="inline-filters">
+          <div class="if-cats" id="if-cats"></div>
+          <div class="if-brand" id="if-brand"></div>
+        </div>
+
+        <!-- map + leaderboard -->
+        <div class="geo-body">
+          <div class="map-wrap">
+            <div id="map"></div>
+            <div class="vp-badge">
+              <div class="k">In current view</div>
+              <div class="v"><span id="vp-val">—</span><small id="vp-shops">— stores</small></div>
+            </div>
+            <div class="layers-ctl" id="layers-ctl">
+              <button class="layers-btn" id="layers-btn" aria-expanded="false">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5M3 16.5l9 5 9-5"/></svg>
+                <span>Layers</span>
+                <span class="layers-count" id="layers-count">0</span>
+                <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="layers" id="layers">
+                <div class="lh">Map layers</div>
+              </div>
+            </div>
+            <div class="legends">
+              <div class="legend vol" id="vol-legend">
+                <span class="ll">Low</span><span class="scale vol-scale"></span><span class="ll">High</span>
+                <span class="legend-label" id="vol-label">spend per cluster</span>
+              </div>
+              <div class="legend" id="legend">
+                <span>Low</span><span class="scale"></span><span>High</span>
+                <span id="legend-label">spend by country</span>
+              </div>
+            </div>
+            <div class="toast" id="toast"></div>
+            <button class="board-reopen" id="board-reopen" title="Show top contributors">
+              <span class="crown"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18l2-9 5 4 2-7 2 7 5-4 2 9z"/></svg></span>
+              <span class="lbl">Top contributors</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+            </button>
+          </div>
+
+          <div class="board" id="board">
+            <div class="board-head">
+              <div class="board-head-row">
+                <div class="t" id="board-title"><span class="crown"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18l2-9 5 4 2-7 2 7 5-4 2 9z"/></svg></span><span id="board-title-text">Top contributors</span></div>
+                <button class="board-collapse" id="board-collapse" title="Collapse panel">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+              </div>
+              <div class="scope"><span class="live"></span><span id="scope-text">Worldwide · top 30 brands</span></div>
+            </div>
+            <div class="board-list" id="board-list"></div>
+            <div class="board-foot">
+              <span id="board-foot-total">—</span>
+              <a id="reset-view">Reset to world view</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- detail panel -->
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel"></aside>
+
+<!-- filter sheet -->
+<div class="scrim" id="sheet-scrim"></div>
+<aside class="sheet" id="filter-sheet">
+  <div class="sheet-head">
+    <h3>Filters</h3>
+    <button class="close" id="sheet-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="sheet-body" id="sheet-body"></div>
+  <div class="sheet-foot">
+    <button class="btn" id="sheet-reset"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5"/></svg>Reset all</button>
+    <button class="btn primary" id="sheet-apply">Show results</button>
+  </div>
+</aside>
+
+<!-- libs -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
+<script src="geo/data.js"></script>
+<script src="geo/app.js"></script>
+</body>
+</html>

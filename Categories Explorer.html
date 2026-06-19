@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lune — Categories Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="geo/styles.css">
+<link rel="stylesheet" href="geo/explore.css">
+</head>
+<body data-page="categories">
+<div class="app">
+  <main class="main">
+    <div class="page-wrap">
+      <a class="back-btn" href="Dashboard.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></a>
+      <div class="pg-head">
+        <div class="ht">
+          <h1>Categories Explorer</h1>
+          <p>All categories with aggregated metrics</p>
+        </div>
+        <div class="ctl">
+          <div class="pill-select"><span class="flag"></span>AED <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div class="pill-select"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Last 6 months <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div class="pill-select">All Countries <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="fsel"><span>Total Spend</span><svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="fsel"><span>Transactions</span><svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="fsel"><span>Customers</span><svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="fsel"><span>Sort</span><svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <button class="apply-btn">Apply Filters</button>
+      </div>
+
+      <div class="tbl-card">
+        <table class="dtable">
+          <thead><tr><th>Category</th><th>Total Spend</th><th>Transactions</th><th>Customers</th><th>Subcategories</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <div class="tbl-foot">Categories <b id="count">—</b></div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="geo/data.js"></script>
+<script src="geo/explore.js"></script>
+<script src="geo/nav.js"></script>
+</body>
+</html>

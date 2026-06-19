@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lune — Category</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="geo/styles.css">
+<link rel="stylesheet" href="geo/explore.css">
+</head>
+<body data-page="category" data-nav="Categories">
+<div class="app">
+  <main class="main">
+    <div class="page-wrap">
+      <a class="back-btn" href="Categories Explorer.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></a>
+      <div class="pg-head">
+        <div class="ht">
+          <h1 id="title">Category</h1>
+        </div>
+        <div class="ctl">
+          <div class="pill-select"><span class="flag"></span>AED <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div class="pill-select"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Last 6 months <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div class="pill-select" id="country-pill"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span class="cv">All Countries</span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kcard"><div class="top"><span class="lbl">Total Spend</span><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="9" r="6"/><path d="M15 9a6 6 0 1 1-6 6"/></svg></span></div><div class="val" id="k-spend">—</div></div>
+        <div class="kcard"><div class="top"><span class="lbl">Total Transactions</span><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span></div><div class="val" id="k-txns">—</div></div>
+        <div class="kcard"><div class="top"><span class="lbl">Total Customers</span><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 5a3 3 0 0 1 0 6"/></svg></span></div><div class="val" id="k-cust">—</div></div>
+        <div class="kcard"><div class="top"><span class="lbl">Brands</span><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/></svg></span></div><div class="val" id="k-brands">—</div></div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="chart-card"><h3 id="chart-title">Spend Over Time</h3><div class="chart-box tall" id="chart-bar"></div></div>
+        <div class="chart-card">
+          <h3 id="share-title">Brand Share</h3>
+          <div class="donut-wrap">
+            <div class="donut-box" id="donut"></div>
+            <div class="donut-legend" id="donut-legend"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="loc-card">
+        <div class="loc-head">
+          <span class="lh-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg></span>
+          <div><h3>Top Locations</h3><p id="loc-sub">Areas driving the most spend in this category</p></div>
+          <a class="loc-cta" id="loc-cta" href="Geolocation Analytics.html">View on map<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        </div>
+        <div class="loc-grid">
+          <div class="loc-map" id="loc-map"></div>
+          <div class="loc-list" id="loc-list"></div>
+        </div>
+        <div class="loc-legend"><span>Lower spend</span><span class="scale"></span><span>Higher spend</span><span style="margin-left:auto">Bubble size &amp; colour = <b>spend per area</b></span></div>
+      </div>
+
+      <div class="sec-card">
+        <div class="sh"><h3 id="subcat-title">Subcategories</h3><p id="subcat-count">—</p></div>
+        <table class="dtable">
+          <thead><tr><th>Subcategory</th><th>Spend</th><th>Transactions</th><th>Customers</th></tr></thead>
+          <tbody id="subcat-rows"></tbody>
+        </table>
+      </div>
+
+      <div class="sec-card">
+        <div class="sh"><h3 id="brands-title">Brands</h3></div>
+        <table class="dtable">
+          <thead><tr><th>Brand</th><th>Spend</th><th>Transactions</th><th>Customers</th></tr></thead>
+          <tbody id="brands-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="geo/data.js"></script>
+<script src="geo/charts.js"></script>
+<script src="geo/explore.js"></script>
+<script src="geo/nav.js"></script>
+</body>
+</html>
