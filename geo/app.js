@@ -605,10 +605,29 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();});
    ============================================================ */
 const panel=document.getElementById('panel'), scrim=document.getElementById('scrim');
 function openPanel(){panel.classList.add('open');panel.style.transform='translateX(0)';scrim.classList.add('open');}
-function closePanel(){panel.classList.remove('open');panel.style.transform='';scrim.classList.remove('open');}
+function closePanel(){panel.classList.remove('open','wide');panel.style.transform='';scrim.classList.remove('open');}
 window.closePanel=closePanel;
 scrim.onclick=closePanel;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
+
+/* ---- SLI helper renderers ---- */
+const CAT_OFFERS={
+  'Dining':{title:'Lunch bundle promotion',desc:'Selected bundle pricing available Monday to Friday, 12–3 PM.'},
+  'Shopping':{title:'Weekend style rewards',desc:'Double points on all in-store purchases Friday to Sunday. Redeemable online and in-store.'},
+  'Travel':{title:'Frequent traveller bonus',desc:'Earn 3× miles on every booking through month end. Applies to all fare classes.'},
+  'Wellness':{title:'Loyalty member offer',desc:'Members earn 10% cashback on purchases over AED 150. Valid through end of month.'},
+  'Groceries':{title:'Fresh deal of the week',desc:'Exclusive cardholder pricing on selected essentials every Monday to Friday.'},
+  'Services':{title:'Digital plan upgrade',desc:'Upgrade to a premium plan at no extra cost for 3 months. Auto-renews at standard rate.'},
+  'Entertainment':{title:'Movie night rewards',desc:'Free popcorn combo with every 2 tickets purchased on Friday evenings.'},
+  'Transportation':{title:'Ride & save offer',desc:'AED 10 off every 5th ride when booked through the app this quarter.'},
+  'Savings & Investments':{title:'New investor bonus',desc:'Zero commission on first 10 trades for new accounts opened this quarter.'}
+};
+function sliKpi(label,val){
+  return `<div class="sli-kpi"><div class="sli-kpi-k">${label}</div><div class="sli-kpi-v">${val}</div></div>`;
+}
+function sliSkpi(label,val){
+  return `<div class="sli-skpi"><div class="sli-skpi-k">${label}</div><div class="sli-skpi-v">${val}</div></div>`;
+}
 
 function metricCard(k,label,val,delta){
   return `<div class="metric-card"><div class="k">${label}</div><div class="v">${val}</div>
@@ -630,6 +649,7 @@ function spark(trend,cur){
     <div class="spark-x">${labels.map(l=>`<span>${l}</span>`).join('')}</div>`;
 }
 function openShop(s){
+  panel.className='panel';
   const b=brandById(s.brandId);
   panel.innerHTML=`
     <div class="panel-head">
@@ -670,48 +690,150 @@ function openShop(s){
 }
 function openBrand(brandId,vis){
   const b=brandById(brandId);
-  const shops=vis.filter(s=>s.brandId===brandId);
-  const spend=shops.reduce((x,s)=>x+s.spend*periodMult(),0);
-  const txns=shops.reduce((x,s)=>x+s.txns*periodMult(),0);
-  const cust=shops.reduce((x,s)=>x+s.customers*periodMult(),0);
-  const avg=Math.round(shops.reduce((x,s)=>x+s.avgTicket,0)/shops.length);
-  const male=Math.round(shops.reduce((x,s)=>x+s.male,0)/shops.length);
-  const age=AGE_BANDS.map((_,i)=>Math.round(shops.reduce((x,s)=>x+s.age[i],0)/shops.length));
-  // top cities
-  const byCity={}; shops.forEach(s=>byCity[s.city]=(byCity[s.city]||0)+s.spend*periodMult());
-  const cities=Object.entries(byCity).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const allShops=vis.filter(s=>s.brandId===brandId).sort((a,x)=>x.spend-a.spend);
+  if(!allShops.length)return;
+
+  /* primary city = highest aggregate spend */
+  const citySpend={};
+  allShops.forEach(s=>citySpend[s.city]=(citySpend[s.city]||0)+s.spend*periodMult());
+  const primaryCity=Object.entries(citySpend).sort((a,x)=>x[1]-a[1])[0][0];
+  const primaryCountry=allShops.find(s=>s.city===primaryCity)?.country||'';
+
+  /* use shops in primary city for the list; fall back to all if only one city */
+  const cityShops=allShops.filter(s=>s.city===primaryCity);
+  const listShops=cityShops.length?cityShops:allShops;
+
+  /* city-level aggregates */
+  const totalSpend=listShops.reduce((x,s)=>x+s.spend*periodMult(),0);
+  const totalTxns=listShops.reduce((x,s)=>x+s.txns*periodMult(),0);
+  const totalCust=listShops.reduce((x,s)=>x+s.customers*periodMult(),0);
+  const avgTicket=Math.round(listShops.reduce((x,s)=>x+s.avgTicket,0)/listShops.length);
+
+  const offer=CAT_OFFERS[b.category]||{title:'Loyalty rewards offer',desc:'Exclusive offers available for all cardholders this month.'};
+
+  panel.className='panel wide';
   panel.innerHTML=`
-    <div class="panel-head">
-      <div class="top">
-        <div class="mk" style="background:${b.color}">${b.abbr}</div>
-        <div><h3>${b.name}</h3>
-          <div class="loc">${b.category} · ${shops.length} stores in current view</div>
-          <span class="cat">Brand summary</span>
+    <div class="sli-panel">
+      <div class="sli-head">
+        <div class="sli-label">Store-level Intelligence</div>
+        <div class="sli-city-row">
+          <div>
+            <h2 class="sli-city">${primaryCity}</h2>
+            <div class="sli-head-sub">${primaryCountry} · ${listShops.length} store${listShops.length===1?'':'s'}</div>
+          </div>
+          <button class="sli-head-close" onclick="closePanel()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
         </div>
-        <button class="close" onclick="closePanel()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
-    </div>
-    <div class="panel-body">
-      <div class="metrics-grid">
-        ${metricCard('spend','Total spend',fmtAED(spend))}
-        ${metricCard('txns','Transactions',fmtNum(txns))}
-        ${metricCard('cust','Customers',fmtNum(cust))}
-        ${metricCard('avg','Avg ticket',fmtAED(avg))}
+      <div class="sli-kpis">
+        ${sliKpi('Total city spend',fmtAED(totalSpend))}
+        ${sliKpi('Transactions',fmtNum(totalTxns))}
+        ${sliKpi('Customers',fmtNum(totalCust))}
+        ${sliKpi('Average ticket',fmtAED(avgTicket))}
+        ${sliKpi('Store count',listShops.length)}
       </div>
-      <div class="psec"><h4>Top locations <span class="hint">by spend, in view</span></h4>
-        <div class="cats">${cities.map(([c,v])=>`<div class="catr"><span class="nm">${c}</span><span class="v">${fmtAED(v)}</span></div>`).join('')}</div>
+      <div class="sli-body">
+        <div class="sli-stores">
+          <div class="sli-stores-head">Stores (${listShops.length})</div>
+          <div class="sli-list" id="sli-list"></div>
+        </div>
+        <div class="sli-detail" id="sli-detail"></div>
       </div>
-      <div class="psec"><h4>Gender split <span class="hint">avg across stores</span></h4>${splitBar(male)}</div>
-      <div class="psec"><h4>Age distribution</h4>${ageRows(age)}</div>
-    </div>
-    <div class="panel-foot">
-      <button class="btn" id="brand-focus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Focus on map</button>
-      <button class="btn primary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Export brand report</button>
     </div>`;
+
+  let activeIdx=0;
+
+  function renderList(){
+    const el=document.getElementById('sli-list');
+    if(!el)return;
+    el.innerHTML=listShops.map((s,i)=>`
+      <div class="sli-store-row${i===activeIdx?' active':''}" data-i="${i}">
+        <div class="sli-sr-mk" style="background:${s.color}">${s.abbr}</div>
+        <div class="sli-sr-mid">
+          <div class="sli-sr-name">${s.area}</div>
+          <div class="sli-sr-code">${s.code} · ${s.addr}</div>
+        </div>
+        <div class="sli-sr-val">
+          <div class="sli-sr-amt">${fmtAED(s.spend*periodMult())}</div>
+          <div class="sli-sr-txns">${fmtNum(s.txns*periodMult())} txns</div>
+        </div>
+      </div>`).join('');
+    el.querySelectorAll('.sli-store-row').forEach(row=>{
+      row.onclick=()=>{activeIdx=+row.dataset.i;renderList();renderDetail();};
+    });
+  }
+
+  function renderDetail(){
+    const el=document.getElementById('sli-detail');
+    if(!el)return;
+    const s=listShops[activeIdx];
+    const cityRank=activeIdx+1;
+    const contrib=totalSpend>0?Math.round(s.spend*periodMult()/totalSpend*1000)/10:0;
+    const inStore=100-s.onlineShare;
+    const deltaSign=s.delta>=0;
+    el.innerHTML=`
+      <div class="sli-store-head">
+        <div class="sli-store-title">
+          <h3>${s.brand} — ${s.area}</h3>
+          <div class="sli-store-loc">${s.code} · ${s.addr} · ${s.city}</div>
+        </div>
+        <span class="sli-active-badge">Store active</span>
+      </div>
+      <div class="sli-store-kpis">
+        ${sliSkpi('Total spend',fmtAED(s.spend*periodMult()))}
+        ${sliSkpi('Transactions',fmtNum(s.txns*periodMult()))}
+        ${sliSkpi('Customers',fmtNum(s.customers*periodMult()))}
+        ${sliSkpi('Average ticket',fmtAED(s.avgTicket))}
+        ${sliSkpi('City contribution',contrib+'%')}
+      </div>
+      <div class="sli-detail-body">
+        <div class="sli-two-col">
+          <div class="sli-card">
+            <h4>Performance &amp; market position</h4>
+            <div class="sli-rows">
+              <div class="sli-row"><span>City rank by spend</span><b>#${cityRank} of ${listShops.length}</b></div>
+              <div class="sli-row"><span>6-month change</span><b class="${deltaSign?'pos':'neg'}">${deltaSign?'+':''}${s.delta}%</b></div>
+              <div class="sli-row"><span>Primary customer segment</span><b>${s.segment}</b></div>
+              <div class="sli-row"><span>Most common transaction</span><b>${s.txnType}</b></div>
+            </div>
+          </div>
+          <div class="sli-right-col">
+            <div class="sli-card">
+              <h4>Gender distribution</h4>
+              <div class="sli-gbar">
+                <div style="width:${s.male}%;background:var(--green)">${s.male>20?s.male+'%':''}</div>
+                <div style="width:${100-s.male}%;background:#C8E6DC">${100-s.male>20?(100-s.male)+'%':''}</div>
+              </div>
+              <div class="sli-glab"><span>Male ${s.male}%</span><span>Female ${100-s.male}%</span></div>
+            </div>
+            <div class="sli-card">
+              <h4>Channel mix</h4>
+              <div class="sli-chan"><span>In-store</span><b>${inStore}%</b></div>
+              <div class="sli-chan"><span>Online / delivery</span><b>${s.onlineShare}%</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="sli-card">
+          <h4>Age distribution</h4>
+          ${ageRows(s.age)}
+        </div>
+        <div class="sli-card sli-offers-card">
+          <h4>Offers &amp; campaigns</h4>
+          <div>
+            <div class="sli-offer-title">${offer.title}<span class="sli-offer-badge">Active</span></div>
+            <div class="sli-offer-desc">${offer.desc}</div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  renderList();
+  renderDetail();
   openPanel();
-  const fb=document.getElementById('brand-focus');
-  if(fb)fb.onclick=()=>{const grp=L.featureGroup(shops.map(s=>L.marker([s.lat,s.lng]))); map.fitBounds(grp.getBounds().pad(.2)); closePanel();};
+
+  const grp=L.featureGroup(listShops.map(s=>L.marker([s.lat,s.lng])));
+  map.fitBounds(grp.getBounds().pad(.25),{duration:.5});
 }
 
 /* ============================================================
