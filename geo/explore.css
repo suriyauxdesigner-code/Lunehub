@@ -127,3 +127,46 @@
 .loc-legend .scale{width:130px;height:8px;border-radius:5px;background:linear-gradient(90deg,#C5E7D5,#5FC39A,#1FA97A,#E0A21E,#E2622E,#B02A26);}
 .loc-legend b{color:var(--ink-2);font-weight:600;}
 @media(max-width:1000px){.loc-grid{grid-template-columns:1fr;gap:18px;}.loc-list{padding-left:0;}}
+
+/* ---- geographic intelligence ---- */
+.geo-insights{margin-bottom:22px;}
+.insights-head{display:flex;align-items:flex-end;justify-content:space-between;margin:2px 2px 14px;}
+.insights-head h2{font-size:19px;font-weight:600;letter-spacing:-.015em;color:var(--logo);margin:0;}
+.insights-head p{font-size:13px;color:var(--muted);margin:3px 0 0;}
+.insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.insight-card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-card);padding:20px;min-width:0;}
+.insight-title{display:flex;align-items:flex-start;gap:11px;padding-bottom:16px;border-bottom:1px solid var(--line-2);}
+.insight-title .insight-ic{width:32px;height:32px;border-radius:10px;background:var(--green-50);color:var(--green-600);
+  display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;flex:none;}
+.insight-title h3{font-size:15.5px;font-weight:600;color:var(--logo);margin:0;}
+.insight-title p{font-size:12px;line-height:1.4;color:var(--muted);margin:3px 0 0;}
+.insight-body{padding-top:14px;}
+.insight-row{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:9px;align-items:center;padding:8px 0;}
+.insight-rank{font-size:11px;font-weight:700;color:var(--faint);text-align:center;}
+.insight-main{min-width:0;}
+.insight-name{display:flex;align-items:baseline;gap:6px;font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.insight-name small{font-size:10.5px;font-weight:500;color:var(--faint);overflow:hidden;text-overflow:ellipsis;}
+.insight-track{height:5px;background:var(--inset-2);border-radius:4px;overflow:hidden;margin-top:5px;}
+.insight-fill{display:block;height:100%;border-radius:4px;background:var(--green);}
+.insight-value{text-align:right;font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;}
+.insight-value small{display:block;font-size:10px;font-weight:500;color:var(--muted);margin-top:2px;}
+.opp-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line-2);}
+.opp-row:last-child{border-bottom:0;}
+.opp-badge{width:35px;height:35px;border-radius:11px;background:#FFF7E8;color:#B87500;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:none;}
+.opp-copy{min-width:0;flex:1;}
+.opp-copy b{display:block;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.opp-copy span{display:block;font-size:11px;color:var(--muted);margin-top:2px;}
+.opp-growth{font-size:12px;font-weight:700;color:var(--green-600);white-space:nowrap;}
+.origin-total{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:13px;}
+.origin-total b{font-size:26px;color:var(--green-ink);letter-spacing:-.02em;}
+.origin-total span{font-size:11px;color:var(--muted);}
+.origin-bar{display:flex;height:12px;border-radius:7px;overflow:hidden;background:var(--inset-2);margin-bottom:14px;}
+.origin-bar span:nth-child(1){background:#0E8E6D}.origin-bar span:nth-child(2){background:#55BE98}.origin-bar span:nth-child(3){background:#C4E8DA}
+.origin-key{display:flex;flex-direction:column;gap:10px;}
+.origin-key div{display:grid;grid-template-columns:10px 1fr auto;gap:8px;align-items:center;font-size:12px;color:var(--ink-2);}
+.origin-key i{width:9px;height:9px;border-radius:3px;background:#0E8E6D;}
+.origin-key div:nth-child(2) i{background:#55BE98}.origin-key div:nth-child(3) i{background:#C4E8DA}
+.origin-key b{font-size:12px;color:var(--ink);}
+.insight-empty{padding:28px 8px;text-align:center;color:var(--muted);font-size:12.5px;}
+@media(max-width:1200px){.insight-grid{grid-template-columns:1fr 1fr}.insight-card:last-child{grid-column:1/-1}}
+@media(max-width:760px){.insight-grid{grid-template-columns:1fr}.insight-card:last-child{grid-column:auto}}
