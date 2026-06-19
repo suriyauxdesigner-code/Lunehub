@@ -263,8 +263,7 @@ function renderBrandGeoDetails(shops,country,brandId,accent){
     return `<div class="metric-list-row">
       <div class="place">${c.city}<small>${country?c.stores+' stores':c.country+' · '+c.stores+' stores'}</small></div>
       ${badge}
-      <div class="metric">${fmtAED(c.spendPerStore)}<small>spend/store</small></div>
-      <div class="metric">${fmtNum(c.txnsPerStore)}<small>txns/store</small></div>
+      <div class="metric">${fmtAED(c.spendPerStore)}<small>${fmtNum(c.txnsPerStore)} txns/store</small></div>
     </div>`;
   }).join('');
 
@@ -407,13 +406,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCityDrilldown()
 
 function renderGeoInsights(shops,country,baseSeed,accent,kind){
   const opp=document.getElementById('geo-opportunities');
-  const origin=document.getElementById('geo-origin');
   const scopeLabel=document.getElementById('geo-scope');
-  if(!opp||!origin)return;
+  if(!opp)return;
   if(scopeLabel)scopeLabel.textContent=country?'Geolocation insights within '+country:'Geolocation insights across all countries';
   if(!shops.length){
-    const empty='<div class="insight-empty">No geographic data for this selection.</div>';
-    opp.innerHTML=origin.innerHTML=empty;
+    opp.innerHTML='<div class="insight-empty">No geographic data for this selection.</div>';
     return;
   }
 
@@ -445,24 +442,7 @@ function renderGeoInsights(shops,country,baseSeed,accent,kind){
       <div class="opp-copy"><b>${c.city}</b><span>${c.stores} location${c.stores===1?'':'s'} · ${fmtNum(Math.round(c.txns/c.stores))} txns/store</span></div>
       <div class="opp-stats"><span class="opp-growth">+${c.growth.toFixed(1)}%</span><span class="opp-score">Score ${Math.round(c.score/maxScore*100)}</span></div>
     </div>`).join('')+
-    `<div class="insight-name" style="margin-top:12px"><small>${kind==='brand'?'Score combines transaction demand, growth rate, and current coverage gap.':'Score combines category demand, growth rate, and active brand coverage.'}</small></div>`;
-
-  const r=rng(seed+991);
-  const weightedOnline=shops.reduce((n,s)=>n+s.onlineShare*s.customers,0)/Math.max(1,shops.reduce((n,s)=>n+s.customers,0));
-  let visitor=Math.round(10+r()*12+weightedOnline*.08);
-  let nearby=Math.round(22+r()*13);
-  let local=Math.max(35,100-nearby-visitor);
-  const total=local+nearby+visitor;
-  local=Math.round(local/total*100);nearby=Math.round(nearby/total*100);visitor=100-local-nearby;
-  const repeat=Math.round(42+r()*27);
-  origin.innerHTML=`
-    <div class="origin-total"><b>${repeat}%</b><span>estimated repeat local customers</span></div>
-    <div class="origin-bar"><span style="width:${local}%"></span><span style="width:${nearby}%"></span><span style="width:${visitor}%"></span></div>
-    <div class="origin-key">
-      <div><i></i><span>Local catchment <small>within 5 km</small></span><b>${local}%</b></div>
-      <div><i></i><span>Nearby visitors <small>5–25 km</small></span><b>${nearby}%</b></div>
-      <div><i></i><span>Travellers <small>over 25 km</small></span><b>${visitor}%</b></div>
-    </div>`;
+    `<div class="opp-footnote">${kind==='brand'?'Score combines transaction demand, growth rate, and current coverage gap.':'Score combines category demand, growth rate, and active brand coverage.'}</div>`;
 }
 
 /* ---- location widget (top areas / stores) — brand & category pages ---- */

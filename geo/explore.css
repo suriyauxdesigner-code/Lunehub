@@ -146,6 +146,10 @@
 .insights-head p{font-size:13px;color:var(--muted);margin:3px 0 0;}
 .insight-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
 .insight-card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-card);padding:20px;min-width:0;}
+.insight-card.wide{grid-column:1/-1;}
+.opp-cols{display:grid;grid-template-columns:repeat(2,1fr);gap:0 24px;}
+.opp-cols .opp-footnote{grid-column:1/-1;font-size:11px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2);}
+.opp-footnote{font-size:11px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2);}
 .insight-title{display:flex;align-items:flex-start;gap:11px;padding-bottom:16px;border-bottom:1px solid var(--line-2);}
 .insight-title .insight-ic{width:32px;height:32px;border-radius:10px;background:var(--green-50);color:var(--green-600);
   display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;flex:none;}
