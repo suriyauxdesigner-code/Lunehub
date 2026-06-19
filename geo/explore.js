@@ -255,28 +255,34 @@ function renderBrandGeoDetails(shops,country,brandId,accent){
     const empty='<div class="insight-empty">No geographic data for this selection.</div>';
     productivity.innerHTML=underserved.innerHTML=dayparts.innerHTML=empty;return;
   }
+  const avgSpendPerStore=rows.reduce((n,c)=>n+c.spendPerStore,0)/Math.max(1,rows.length);
   const productive=[...rows].sort((a,b)=>b.spendPerStore-a.spendPerStore).slice(0,6);
-  productivity.innerHTML=productive.map(c=>`
-    <div class="metric-list-row">
+  productivity.innerHTML=productive.map(c=>{
+    const pct=Math.round((c.spendPerStore-avgSpendPerStore)/Math.max(1,avgSpendPerStore)*100);
+    const badge=pct>=0?`<span class="region-state grow">+${pct}% avg</span>`:`<span class="region-state low">${pct}% avg</span>`;
+    return `<div class="metric-list-row">
       <div class="place">${c.city}<small>${country?c.stores+' stores':c.country+' · '+c.stores+' stores'}</small></div>
+      ${badge}
       <div class="metric">${fmtAED(c.spendPerStore)}<small>spend/store</small></div>
       <div class="metric">${fmtNum(c.txnsPerStore)}<small>txns/store</small></div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
-  const avgProductivity=rows.reduce((n,c)=>n+c.spendPerStore,0)/rows.length;
+  const avgProductivity=avgSpendPerStore;
   const avgCoverage=rows.reduce((n,c)=>n+c.stores,0)/rows.length;
   const assessed=rows.map(c=>{
     const demand=c.txnsPerStore*(1+c.customers/Math.max(1,c.txns));
     const underservedScore=demand/Math.sqrt(c.stores);
     const state=c.spendPerStore<avgProductivity*.78?'low':c.stores<avgCoverage*.65?'under':'grow';
-    return {...c,underservedScore,state};
+    const gap=Math.round((avgProductivity-c.spendPerStore)/Math.max(1,avgProductivity)*100);
+    return {...c,underservedScore,state,gap};
   }).sort((a,b)=>{
     const priority={low:2,under:1,grow:0};
     return priority[b.state]-priority[a.state]||b.underservedScore-a.underservedScore;
   }).slice(0,6);
   underserved.innerHTML=assessed.map(c=>`
     <div class="metric-list-row">
-      <div class="place">${c.city}<small>${fmtNum(c.txnsPerStore)} transactions per store</small></div>
+      <div class="place">${c.city}<small>${c.state==='low'?`${c.gap}% below brand avg · `:''}${fmtNum(c.txnsPerStore)} txns/store</small></div>
       <span class="region-state ${c.state}">${c.state==='low'?'UNDERPERFORMING':c.state==='under'?'UNDERSERVED':'POTENTIAL'}</span>
       <div class="metric">${c.stores}<small>stores</small></div>
     </div>`).join('');
@@ -297,13 +303,12 @@ function renderBrandGeoDetails(shops,country,brandId,accent){
 
 function renderCategoryGeoDetails(shops,country,category){
   const concentration=document.getElementById('category-concentration');
-  const avgTicket=document.getElementById('category-avg-ticket');
   const growth=document.getElementById('category-regional-growth');
-  if(!concentration||!avgTicket||!growth)return;
+  if(!concentration||!growth)return;
   const rows=cityRollup(shops);
   if(!rows.length){
     const empty='<div class="insight-empty">No geographic data for this selection.</div>';
-    concentration.innerHTML=avgTicket.innerHTML=growth.innerHTML=empty;return;
+    concentration.innerHTML=growth.innerHTML=empty;return;
   }
   const totalSpend=rows.reduce((n,c)=>n+c.spend,0);
   const shares=rows.map(c=>c.spend/Math.max(1,totalSpend));
@@ -320,13 +325,6 @@ function renderCategoryGeoDetails(shops,country,category){
     </div>`+
     opportunities.map((c,i)=>`<div class="metric-list-row"><div class="place">${c.city}<small>${fmtNum(c.txnsPerStore)} txns/location · ${c.brandCount} active brands</small></div><span class="region-state under">${i<2?'HIGH':'MEDIUM'} OPPORTUNITY</span><div class="metric">${fmtAED(c.spend)}<small>category demand</small></div></div>`).join('')+
     '<div class="insight-name" style="margin-top:12px"><small>Opportunity indicates comparatively high transaction demand per location and per active brand. It does not mean the city has no existing coverage.</small></div>';
-
-  avgTicket.innerHTML=[...rows].sort((a,b)=>b.avgTicket-a.avgTicket).slice(0,6).map(c=>`
-    <div class="metric-list-row">
-      <div class="place">${c.city}<small>${country?c.stores+' locations':c.country+' · '+c.stores+' locations'}</small></div>
-      <div class="metric">${fmtAED(c.avgTicket)}<small>avg transaction</small></div>
-      <div class="metric">${fmtNum(c.txns)}<small>transactions</small></div>
-    </div>`).join('');
 
   const regionMap={};
   shops.forEach(s=>{
@@ -408,15 +406,14 @@ function renderStoreDetail(store,cityShops){
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCityDrilldown();});
 
 function renderGeoInsights(shops,country,baseSeed,accent,kind){
-  const perf=document.getElementById('geo-performance');
   const opp=document.getElementById('geo-opportunities');
   const origin=document.getElementById('geo-origin');
   const scopeLabel=document.getElementById('geo-scope');
-  if(!perf||!opp||!origin)return;
-  if(scopeLabel)scopeLabel.textContent=country?'Geographic performance within '+country:'Geographic performance across all countries';
+  if(!opp||!origin)return;
+  if(scopeLabel)scopeLabel.textContent=country?'Geolocation insights within '+country:'Geolocation insights across all countries';
   if(!shops.length){
     const empty='<div class="insight-empty">No geographic data for this selection.</div>';
-    perf.innerHTML=opp.innerHTML=origin.innerHTML=empty;
+    opp.innerHTML=origin.innerHTML=empty;
     return;
   }
 
@@ -430,17 +427,6 @@ function renderGeoInsights(shops,country,baseSeed,accent,kind){
     perStore:c.spend/c.stores,
     spendPerCustomer:c.customers?c.spend/c.customers:0
   }));
-  const ranked=[...rows].sort((a,b)=>b.spend-a.spend).slice(0,5);
-  const maxSpend=ranked[0]?ranked[0].spend:1;
-  perf.innerHTML=ranked.map((c,i)=>`
-    <div class="insight-row">
-      <span class="insight-rank">${i+1}</span>
-      <div class="insight-main">
-        <div class="insight-name">${c.city}<small>${country?c.stores+' locations':c.country}</small></div>
-        <div class="insight-track"><span class="insight-fill" style="width:${Math.max(6,c.spend/maxSpend*100)}%;background:${accent}"></span></div>
-      </div>
-      <div class="insight-value">${fmtAED(c.spend)}<small>${fmtAED(c.perStore)}/store</small></div>
-    </div>`).join('');
 
   const seed=baseSeed+textSeed(country);
   const opportunityRows=rows.map(c=>{
@@ -449,14 +435,17 @@ function renderGeoInsights(shops,country,baseSeed,accent,kind){
     const demand=(c.txns/Math.max(1,c.stores))*(0.75+r()*0.5);
     const score=demand*(1+growth/100)/Math.sqrt(c.stores);
     return {...c,growth,score};
-  }).sort((a,b)=>b.score-a.score).slice(0,3);
+  }).sort((a,b)=>b.score-a.score).slice(0,4);
+  const maxScore=Math.max(...opportunityRows.map(r=>r.score),1);
+  const cls=['opp-high','opp-med','opp-watch','opp-watch'];
+  const lbl=['HIGH','MED','WATCH','WATCH'];
   opp.innerHTML=opportunityRows.map((c,i)=>`
     <div class="opp-row">
-      <span class="opp-badge">${i===0?'HIGH':i===1?'MED':'WATCH'}</span>
-      <div class="opp-copy"><b>${c.city}</b><span>${c.stores} location${c.stores===1?'':'s'} · ${fmtNum(c.txns/c.stores)} txns/store</span></div>
-      <span class="opp-growth">+${c.growth.toFixed(1)}%</span>
+      <span class="opp-badge ${cls[i]}">${lbl[i]}</span>
+      <div class="opp-copy"><b>${c.city}</b><span>${c.stores} location${c.stores===1?'':'s'} · ${fmtNum(Math.round(c.txns/c.stores))} txns/store</span></div>
+      <div class="opp-stats"><span class="opp-growth">+${c.growth.toFixed(1)}%</span><span class="opp-score">Score ${Math.round(c.score/maxScore*100)}</span></div>
     </div>`).join('')+
-    `<div class="insight-name" style="margin-top:12px"><small>${kind==='brand'?'Opportunity combines demand, growth and current store coverage.':'Opportunity combines category demand, growth and current brand coverage.'}</small></div>`;
+    `<div class="insight-name" style="margin-top:12px"><small>${kind==='brand'?'Score combines transaction demand, growth rate, and current coverage gap.':'Score combines category demand, growth rate, and active brand coverage.'}</small></div>`;
 
   const r=rng(seed+991);
   const weightedOnline=shops.reduce((n,s)=>n+s.onlineShare*s.customers,0)/Math.max(1,shops.reduce((n,s)=>n+s.customers,0));
