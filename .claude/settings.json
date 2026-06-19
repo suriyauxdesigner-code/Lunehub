@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"/Users/suriya/Lune/geolocation analytics/Geolocation analytics updated\" && git add -u && git diff --cached --quiet || (git commit -m \"Auto-save: $(date '+%Y-%m-%d %H:%M:%S')\" && git push origin main) 2>/dev/null || true",
+            "timeout": 30,
+            "statusMessage": "Auto-saving to GitHub..."
+          }
+        ]
+      }
+    ]
+  }
+}

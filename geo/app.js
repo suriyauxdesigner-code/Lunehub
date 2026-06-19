@@ -717,8 +717,6 @@ function openBrand(brandId,vis){
   const totalCust=listShops.reduce((x,s)=>x+s.customers*periodMult(),0);
   const avgTicket=Math.round(listShops.reduce((x,s)=>x+s.avgTicket,0)/listShops.length);
 
-  const offer=CAT_OFFERS[b.category]||{title:'Loyalty rewards offer',desc:'Exclusive offers available for all cardholders this month.'};
-
   panel.className='panel wide modal';
   panel.innerHTML=`
     <div class="sli-panel">
@@ -783,7 +781,6 @@ function openBrand(brandId,vis){
     const s=listShops[activeIdx];
     const rank=activeIdx+1;
     const contrib=totalSpend>0?Math.round(s.spend*periodMult()/totalSpend*1000)/10:0;
-    const inStore=100-s.onlineShare;
     const deltaSign=s.delta>=0;
     el.innerHTML=`
       <div class="sli-store-head">
@@ -798,45 +795,31 @@ function openBrand(brandId,vis){
         ${sliSkpi('Transactions',fmtNum(s.txns*periodMult()))}
         ${sliSkpi('Customers',fmtNum(s.customers*periodMult()))}
         ${sliSkpi('Average ticket',fmtAED(s.avgTicket))}
-        ${sliSkpi('View contribution',contrib+'%')}
+        ${sliSkpi('City contribution',contrib+'%')}
       </div>
       <div class="sli-detail-body">
         <div class="sli-two-col">
           <div class="sli-card">
             <h4>Performance &amp; market position</h4>
             <div class="sli-rows">
-              <div class="sli-row"><span>Rank in view</span><b>#${rank} of ${listShops.length}</b></div>
+              <div class="sli-row"><span>City rank by spend</span><b>#${rank} of ${listShops.length}</b></div>
               <div class="sli-row"><span>6-month change</span><b class="${deltaSign?'pos':'neg'}">${deltaSign?'+':''}${s.delta}%</b></div>
               <div class="sli-row"><span>Primary customer segment</span><b>${s.segment}</b></div>
               <div class="sli-row"><span>Most common transaction</span><b>${s.txnType}</b></div>
             </div>
           </div>
-          <div class="sli-right-col">
-            <div class="sli-card">
-              <h4>Gender distribution</h4>
-              <div class="sli-gbar">
-                <div style="width:${s.male}%;background:var(--green)">${s.male>20?s.male+'%':''}</div>
-                <div style="width:${100-s.male}%;background:#C8E6DC">${100-s.male>20?(100-s.male)+'%':''}</div>
-              </div>
-              <div class="sli-glab"><span>Male ${s.male}%</span><span>Female ${100-s.male}%</span></div>
+          <div class="sli-card">
+            <h4>Gender distribution</h4>
+            <div class="sli-gbar">
+              <div style="width:${s.male}%;background:var(--green)">${s.male>20?s.male+'%':''}</div>
+              <div style="width:${100-s.male}%;background:#C8E6DC">${100-s.male>20?(100-s.male)+'%':''}</div>
             </div>
-            <div class="sli-card">
-              <h4>Channel mix</h4>
-              <div class="sli-chan"><span>In-store</span><b>${inStore}%</b></div>
-              <div class="sli-chan"><span>Online / delivery</span><b>${s.onlineShare}%</b></div>
-            </div>
+            <div class="sli-glab"><span>Male ${s.male}%</span><span>Female ${100-s.male}%</span></div>
           </div>
         </div>
         <div class="sli-card">
           <h4>Age distribution</h4>
           ${ageRows(s.age)}
-        </div>
-        <div class="sli-card sli-offers-card">
-          <h4>Offers &amp; campaigns</h4>
-          <div>
-            <div class="sli-offer-title">${offer.title}<span class="sli-offer-badge">Active</span></div>
-            <div class="sli-offer-desc">${offer.desc}</div>
-          </div>
         </div>
       </div>`;
   }
