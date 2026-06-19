@@ -136,6 +136,7 @@ if(page==='brand'){
     renderBrandTransactions(sc,country);
     renderGeoInsights(sc,country,id*43+11,b.color,'brand');
     renderBrandGeoDetails(sc,country,id,b.color);
+    renderStoreDirectory(sc,country,false);
   }
 
   function renderBrandTransactions(sc,country){
@@ -204,6 +205,7 @@ if(page==='category'){
     [...brandsRows.querySelectorAll('tr[data-id]')].forEach(tr=>tr.onclick=()=>location.href='Brand.html?brand='+tr.dataset.id);
     renderGeoInsights(sc,country,cat.length*59+17,'#13A07B','category');
     renderCategoryGeoDetails(sc,country,cat);
+    renderStoreDirectory(sc,country,true);
   }
 
   renderCategoryScope(inCat,'');
@@ -344,6 +346,134 @@ function renderCategoryGeoDetails(shops,country,category){
       <div class="gshare">${Math.round(r.share*100)}% share</div>
       <div class="gvalue">+${r.growth.toFixed(1)}%</div>
     </div>`).join('');
+}
+
+function renderStoreDirectory(shops,country,showBrand){
+  const el=document.getElementById('store-directory');
+  if(!el)return;
+  if(!country){el.hidden=true;return;}
+
+  // city rank by spend within each city
+  const cityGroups={};
+  shops.forEach(s=>{(cityGroups[s.city]=cityGroups[s.city]||[]).push(s);});
+  const cityRank={};
+  Object.values(cityGroups).forEach(grp=>{
+    [...grp].sort((a,b)=>b.spend-a.spend).forEach((s,i)=>{cityRank[s.id]=i+1;});
+  });
+
+  const uCities=[...new Set(shops.map(s=>s.city))].sort();
+  const uBrands=showBrand?[...new Set(shops.map(s=>s.brand))].sort():[];
+
+  let q='',fCity='',fBrand='',fGrowth='',sortCol='spend',sortAsc=false;
+
+  el.hidden=false;
+  el.innerHTML=`
+  <div class="sd-card">
+    <div class="sd-head">
+      <div><h3>Store Directory</h3><p>All <b>${shops.length}</b> stores in <b>${country}</b> — click any row to open store intelligence</p></div>
+    </div>
+    <div class="sd-controls">
+      <input class="sd-search" id="sd-search" type="search" placeholder="Search store or city…">
+      <div class="sd-filters">
+        <select class="sd-select" id="sd-city"><option value="">All Cities</option>${uCities.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
+        ${showBrand?`<select class="sd-select" id="sd-brand"><option value="">All Brands</option>${uBrands.map(b=>`<option value="${b}">${b}</option>`).join('')}</select>`:''}
+        <select class="sd-select" id="sd-growth"><option value="">Any Growth</option><option value="pos">Growing (+)</option><option value="neg">Declining (−)</option></select>
+      </div>
+    </div>
+    <div class="sd-table-wrap">
+      <table class="sd-table">
+        <thead><tr>
+          <th class="sd-col-n">#</th>
+          <th class="sd-sortable" data-col="area">Store</th>
+          <th class="sd-sortable" data-col="city">City</th>
+          ${showBrand?'<th class="sd-sortable" data-col="brand">Brand</th>':''}
+          <th class="sd-sortable sd-r" data-col="spend">Spend</th>
+          <th class="sd-sortable sd-r" data-col="txns">Txns</th>
+          <th class="sd-sortable sd-r" data-col="customers">Customers</th>
+          <th class="sd-sortable sd-r" data-col="avgTicket">Avg Ticket</th>
+          <th class="sd-sortable sd-r" data-col="delta">Growth</th>
+          <th class="sd-r sd-col-cr">City Rank</th>
+        </tr></thead>
+        <tbody id="sd-tbody"></tbody>
+      </table>
+    </div>
+    <div class="sd-footer" id="sd-footer"></div>
+  </div>`;
+
+  function getRows(){
+    const lq=q.toLowerCase();
+    return shops.filter(s=>{
+      if(fCity&&s.city!==fCity)return false;
+      if(fBrand&&s.brand!==fBrand)return false;
+      if(fGrowth==='pos'&&s.delta<0)return false;
+      if(fGrowth==='neg'&&s.delta>=0)return false;
+      if(lq&&!s.area.toLowerCase().includes(lq)&&!s.city.toLowerCase().includes(lq))return false;
+      return true;
+    });
+  }
+
+  function sortRows(rows){
+    return [...rows].sort((a,b)=>{
+      const isStr=['area','city','brand'].includes(sortCol);
+      const va=isStr?(a[sortCol]||''):+(a[sortCol]||0);
+      const vb=isStr?(b[sortCol]||''):+(b[sortCol]||0);
+      if(isStr)return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
+      return sortAsc?va-vb:vb-va;
+    });
+  }
+
+  function draw(){
+    const rows=sortRows(getRows());
+    const tbody=document.getElementById('sd-tbody');
+    const footer=document.getElementById('sd-footer');
+    if(!tbody)return;
+    el.querySelectorAll('.sd-sortable').forEach(th=>{
+      const active=th.dataset.col===sortCol;
+      th.classList.toggle('sd-sort-on',active);
+      th.dataset.dir=active?(sortAsc?'asc':'desc'):'';
+    });
+    tbody.innerHTML=rows.map((s,i)=>{
+      const dSign=s.delta>=0?'+':'';
+      const dCls=s.delta>=0?'sd-pos':'sd-neg';
+      const brandCell=showBrand?`<td><span class="mono sm" style="background:${s.color}">${s.abbr}</span> ${s.brand}</td>`:'';
+      return `<tr class="sd-row" data-id="${s.id}" data-city="${s.city}">
+        <td class="sd-col-n sd-mut">${i+1}</td>
+        <td class="sd-nm"><b>${s.area}</b><span>${s.code}${s.addr?' · '+s.addr:''}</span></td>
+        <td class="sd-mut">${s.city}</td>
+        ${brandCell}
+        <td class="sd-r">${fmtAED(s.spend)}</td>
+        <td class="sd-r">${fmtNum(s.txns)}</td>
+        <td class="sd-r">${fmtNum(s.customers)}</td>
+        <td class="sd-r">${fmtAED(s.avgTicket)}</td>
+        <td class="sd-r ${dCls}">${dSign}${s.delta.toFixed(1)}%</td>
+        <td class="sd-r sd-mut">#${cityRank[s.id]}</td>
+      </tr>`;
+    }).join('');
+    footer.textContent=rows.length===shops.length
+      ?`${rows.length} stores`
+      :`${rows.length} of ${shops.length} stores`;
+    tbody.querySelectorAll('.sd-row').forEach(tr=>tr.onclick=()=>{
+      const storeId=+tr.dataset.id;
+      const city=tr.dataset.city;
+      openCityDrilldown(shops.filter(s=>s.city===city),city,storeId,showBrand);
+    });
+  }
+
+  const srch=el.querySelector('#sd-search');
+  const ctSel=el.querySelector('#sd-city');
+  const brSel=el.querySelector('#sd-brand');
+  const grSel=el.querySelector('#sd-growth');
+  if(srch)srch.oninput=e=>{q=e.target.value;draw();};
+  if(ctSel)ctSel.onchange=e=>{fCity=e.target.value;draw();};
+  if(brSel)brSel.onchange=e=>{fBrand=e.target.value;draw();};
+  if(grSel)grSel.onchange=e=>{fGrowth=e.target.value;draw();};
+  el.querySelectorAll('.sd-sortable').forEach(th=>th.onclick=()=>{
+    if(sortCol===th.dataset.col)sortAsc=!sortAsc;
+    else{sortCol=th.dataset.col;sortAsc=['area','city','brand'].includes(sortCol);}
+    draw();
+  });
+
+  draw();
 }
 
 function openCityDrilldown(shops,city,selectedStoreId,showBrand){
