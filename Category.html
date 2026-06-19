@@ -27,6 +27,12 @@
         </div>
       </div>
 
+      <div class="detail-tabs" role="tablist">
+        <button class="detail-tab active" data-tab="overview" role="tab">Overview</button>
+        <button class="detail-tab" data-tab="geolocation" role="tab">Geolocation Insights</button>
+      </div>
+
+      <section class="tab-panel active" data-panel="overview">
       <div class="kpis">
         <div class="kcard"><div class="top"><span class="lbl">Total Spend</span><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="9" r="6"/><path d="M15 9a6 6 0 1 1-6 6"/></svg></span></div><div class="val" id="k-spend">—</div></div>
         <div class="kcard"><div class="top"><span class="lbl">Total Transactions</span><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span></div><div class="val" id="k-txns">—</div></div>
@@ -45,6 +51,24 @@
         </div>
       </div>
 
+      <div class="sec-card">
+        <div class="sh"><h3 id="subcat-title">Subcategories</h3><p id="subcat-count">—</p></div>
+        <table class="dtable">
+          <thead><tr><th>Subcategory</th><th>Spend</th><th>Transactions</th><th>Customers</th></tr></thead>
+          <tbody id="subcat-rows"></tbody>
+        </table>
+      </div>
+
+      <div class="sec-card">
+        <div class="sh"><h3 id="brands-title">Brands</h3></div>
+        <table class="dtable">
+          <thead><tr><th>Brand</th><th>Spend</th><th>Transactions</th><th>Customers</th></tr></thead>
+          <tbody id="brands-rows"></tbody>
+        </table>
+      </div>
+      </section>
+
+      <section class="tab-panel" data-panel="geolocation">
       <div class="loc-card">
         <div class="loc-head">
           <span class="lh-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg></span>
@@ -78,21 +102,12 @@
         </div>
       </section>
 
-      <div class="sec-card">
-        <div class="sh"><h3 id="subcat-title">Subcategories</h3><p id="subcat-count">—</p></div>
-        <table class="dtable">
-          <thead><tr><th>Subcategory</th><th>Spend</th><th>Transactions</th><th>Customers</th></tr></thead>
-          <tbody id="subcat-rows"></tbody>
-        </table>
-      </div>
-
-      <div class="sec-card">
-        <div class="sh"><h3 id="brands-title">Brands</h3></div>
-        <table class="dtable">
-          <thead><tr><th>Brand</th><th>Spend</th><th>Transactions</th><th>Customers</th></tr></thead>
-          <tbody id="brands-rows"></tbody>
-        </table>
-      </div>
+      <section class="advanced-geo-grid">
+        <article class="advanced-geo-card"><div class="advanced-head"><h3>Category Concentration &amp; Whitespace</h3><p>Coverage concentration and underserved cities</p></div><div id="category-concentration"></div></article>
+        <article class="advanced-geo-card"><div class="advanced-head"><h3>Average Transaction Value by Location</h3><p>Average ticket across leading cities</p></div><div id="category-avg-ticket"></div></article>
+        <article class="advanced-geo-card wide"><div class="advanced-head"><h3>Category Growth by Region</h3><p>Estimated regional momentum and spend contribution</p></div><div id="category-regional-growth"></div></article>
+      </section>
+      </section>
     </div>
   </main>
 </div>

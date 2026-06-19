@@ -113,6 +113,7 @@ if(page==='categories'){
 
 /* ---------------- BRAND DETAIL ---------------- */
 if(page==='brand'){
+  setupDetailTabs();
   const id=+qs.get('brand')||0;
   const b=BRANDS[id];
   const allBrandShops=SHOPS.filter(s=>s.brandId===id);
@@ -134,6 +135,7 @@ if(page==='brand'){
     window.Charts.area(document.getElementById('chart-area'),monthly(id*13+seed+5,agg.txns),MONTHS);
     renderBrandTransactions(sc,country);
     renderGeoInsights(sc,country,id*43+11,b.color,'brand');
+    renderBrandGeoDetails(sc,country,id,b.color);
   }
 
   function renderBrandTransactions(sc,country){
@@ -159,6 +161,7 @@ if(page==='brand'){
 
 /* ---------------- CATEGORY DETAIL ---------------- */
 if(page==='category'){
+  setupDetailTabs();
   const cat=qs.get('cat')||'Dining';
   document.title='Lune — '+cat;
   document.getElementById('title').textContent=cat;
@@ -200,6 +203,7 @@ if(page==='category'){
       :'<tr><td colspan="4" class="c-mut">No brands for this country.</td></tr>';
     [...brandsRows.querySelectorAll('tr[data-id]')].forEach(tr=>tr.onclick=()=>location.href='Brand.html?brand='+tr.dataset.id);
     renderGeoInsights(sc,country,cat.length*59+17,'#13A07B','category');
+    renderCategoryGeoDetails(sc,country,cat);
   }
 
   renderCategoryScope(inCat,'');
@@ -209,6 +213,139 @@ if(page==='category'){
 
 /* ---- helpers ---- */
 function kpi(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
+
+function setupDetailTabs(){
+  const tabs=[...document.querySelectorAll('.detail-tab')];
+  const panels=[...document.querySelectorAll('.tab-panel')];
+  tabs.forEach(tab=>tab.onclick=()=>{
+    const name=tab.dataset.tab;
+    tabs.forEach(t=>t.classList.toggle('active',t===tab));
+    panels.forEach(p=>p.classList.toggle('active',p.dataset.panel===name));
+    if(name==='geolocation')setTimeout(()=>{
+      if(window.__loc&&window.__loc.map){
+        window.__loc.map.invalidateSize();
+        window.__loc.render();
+      }
+    },40);
+  });
+}
+
+function cityRollup(shops){
+  const m={};
+  shops.forEach(s=>{
+    const c=m[s.city]||(m[s.city]={city:s.city,country:s.country,spend:0,txns:0,customers:0,stores:0,brands:new Set()});
+    c.spend+=s.spend;c.txns+=s.txns;c.customers+=s.customers;c.stores++;c.brands.add(s.brandId);
+  });
+  return Object.values(m).map(c=>({
+    ...c,
+    brandCount:c.brands.size,
+    spendPerStore:c.spend/Math.max(1,c.stores),
+    txnsPerStore:c.txns/Math.max(1,c.stores),
+    avgTicket:c.spend/Math.max(1,c.txns)
+  }));
+}
+
+function renderBrandGeoDetails(shops,country,brandId,accent){
+  const productivity=document.getElementById('brand-store-productivity');
+  const underserved=document.getElementById('brand-underserved');
+  const dayparts=document.getElementById('brand-dayparts');
+  if(!productivity||!underserved||!dayparts)return;
+  const rows=cityRollup(shops);
+  if(!rows.length){
+    const empty='<div class="insight-empty">No geographic data for this selection.</div>';
+    productivity.innerHTML=underserved.innerHTML=dayparts.innerHTML=empty;return;
+  }
+  const productive=[...rows].sort((a,b)=>b.spendPerStore-a.spendPerStore).slice(0,6);
+  productivity.innerHTML=productive.map(c=>`
+    <div class="metric-list-row">
+      <div class="place">${c.city}<small>${country?c.stores+' stores':c.country+' · '+c.stores+' stores'}</small></div>
+      <div class="metric">${fmtAED(c.spendPerStore)}<small>spend/store</small></div>
+      <div class="metric">${fmtNum(c.txnsPerStore)}<small>txns/store</small></div>
+    </div>`).join('');
+
+  const avgProductivity=rows.reduce((n,c)=>n+c.spendPerStore,0)/rows.length;
+  const avgCoverage=rows.reduce((n,c)=>n+c.stores,0)/rows.length;
+  const assessed=rows.map(c=>{
+    const demand=c.txnsPerStore*(1+c.customers/Math.max(1,c.txns));
+    const underservedScore=demand/Math.sqrt(c.stores);
+    const state=c.spendPerStore<avgProductivity*.78?'low':c.stores<avgCoverage*.65?'under':'grow';
+    return {...c,underservedScore,state};
+  }).sort((a,b)=>{
+    const priority={low:2,under:1,grow:0};
+    return priority[b.state]-priority[a.state]||b.underservedScore-a.underservedScore;
+  }).slice(0,6);
+  underserved.innerHTML=assessed.map(c=>`
+    <div class="metric-list-row">
+      <div class="place">${c.city}<small>${fmtNum(c.txnsPerStore)} transactions per store</small></div>
+      <span class="region-state ${c.state}">${c.state==='low'?'UNDERPERFORMING':c.state==='under'?'UNDERSERVED':'POTENTIAL'}</span>
+      <div class="metric">${c.stores}<small>stores</small></div>
+    </div>`).join('');
+
+  const topCities=[...rows].sort((a,b)=>b.txns-a.txns).slice(0,6);
+  const parts=['Morning','Lunch','Afternoon','Evening','Late'];
+  const days=['Mon','Tue','Wed','Thu','Fri'];
+  let html='<div class="daypart-wrap"><div class="daypart-grid"><div class="dh">City</div>'+parts.map(p=>`<div class="dh">${p}</div>`).join('')+'<div class="dh">Peak</div>';
+  topCities.forEach(c=>{
+    const r=rng(brandId*211+textSeed(country+c.city));
+    const vals=parts.map(()=>Math.round(30+r()*70));
+    const max=Math.max(...vals),peak=vals.indexOf(max);
+    html+=`<div class="daypart-city">${c.city}</div>`+vals.map(v=>`<div class="daypart-cell" style="background:${accent};opacity:${(0.16+v/max*.68).toFixed(2)}">${v}</div>`).join('')+
+      `<div class="daypart-peak">${days[Math.floor(r()*days.length)]} · ${parts[peak]}</div>`;
+  });
+  dayparts.innerHTML=html+'</div></div>';
+}
+
+function renderCategoryGeoDetails(shops,country,category){
+  const concentration=document.getElementById('category-concentration');
+  const avgTicket=document.getElementById('category-avg-ticket');
+  const growth=document.getElementById('category-regional-growth');
+  if(!concentration||!avgTicket||!growth)return;
+  const rows=cityRollup(shops);
+  if(!rows.length){
+    const empty='<div class="insight-empty">No geographic data for this selection.</div>';
+    concentration.innerHTML=avgTicket.innerHTML=growth.innerHTML=empty;return;
+  }
+  const totalSpend=rows.reduce((n,c)=>n+c.spend,0);
+  const shares=rows.map(c=>c.spend/Math.max(1,totalSpend));
+  const top3=[...rows].sort((a,b)=>b.spend-a.spend).slice(0,3).reduce((n,c)=>n+c.spend,0)/Math.max(1,totalSpend);
+  const hhi=Math.round(shares.reduce((n,s)=>n+s*s,0)*10000);
+  const whitespace=[...rows].map(c=>({...c,spaceScore:c.txnsPerStore/Math.max(1,c.brandCount)}))
+    .sort((a,b)=>b.spaceScore-a.spaceScore).slice(0,4);
+  concentration.innerHTML=`
+    <div class="summary-strip">
+      <div class="summary-stat"><span>Top 3 city share</span><b>${Math.round(top3*100)}%</b></div>
+      <div class="summary-stat"><span>Concentration index</span><b>${fmtNum(hhi)}</b></div>
+      <div class="summary-stat"><span>Active cities</span><b>${rows.length}</b></div>
+    </div>`+
+    whitespace.map(c=>`<div class="metric-list-row"><div class="place">${c.city}<small>${c.brandCount} brands · ${fmtNum(c.txnsPerStore)} txns/location</small></div><span class="region-state under">WHITESPACE</span><div class="metric">${fmtAED(c.spend)}<small>category spend</small></div></div>`).join('');
+
+  avgTicket.innerHTML=[...rows].sort((a,b)=>b.avgTicket-a.avgTicket).slice(0,6).map(c=>`
+    <div class="metric-list-row">
+      <div class="place">${c.city}<small>${country?c.stores+' locations':c.country+' · '+c.stores+' locations'}</small></div>
+      <div class="metric">${fmtAED(c.avgTicket)}<small>avg transaction</small></div>
+      <div class="metric">${fmtNum(c.txns)}<small>transactions</small></div>
+    </div>`).join('');
+
+  const regionMap={};
+  shops.forEach(s=>{
+    const key=country?s.city:s.country;
+    const a=regionMap[key]||(regionMap[key]={name:key,spend:0,txns:0});
+    a.spend+=s.spend;a.txns+=s.txns;
+  });
+  const seed=category.length*307+textSeed(country);
+  const regions=Object.values(regionMap).map(a=>{
+    const r=rng(seed+textSeed(a.name));
+    return {...a,growth:Math.round((3+r()*25)*10)/10,share:a.spend/Math.max(1,totalSpend)};
+  }).sort((a,b)=>b.growth-a.growth).slice(0,8);
+  const maxShare=Math.max(...regions.map(r=>r.share),.01);
+  growth.innerHTML=regions.map(r=>`
+    <div class="growth-row">
+      <div class="gname">${r.name}</div>
+      <div class="gtrack"><span class="gfill" style="width:${Math.max(5,r.share/maxShare*100)}%"></span></div>
+      <div class="gshare">${Math.round(r.share*100)}% share</div>
+      <div class="gvalue">+${r.growth.toFixed(1)}%</div>
+    </div>`).join('');
+}
 
 function renderGeoInsights(shops,country,baseSeed,accent,kind){
   const perf=document.getElementById('geo-performance');
