@@ -31,7 +31,7 @@
       ${item('Transactions','',null,true)}
       ${item('API keys','',null,true)}
       <a class="nav-item nav-section">${I.ana}Analytics</a>
-      ${item('Dashboard','Dashboard.html',null,true)}
+      ${item('Dashboard','index.html',null,true)}
       ${item('Geography','Geolocation Analytics.html',null,true)}
       ${item('Brands','Brand Explorer.html',null,true)}
       ${item('Categories','Categories Explorer.html',null,true)}
