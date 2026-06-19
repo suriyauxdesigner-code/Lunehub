@@ -392,69 +392,17 @@ function closeCityDrilldown(){
   modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.classList.remove('modal-open');
 }
 
-function storeOffers(store){
-  const offers=[
-    {name:'Weekend cashback',detail:'10% cashback on eligible card purchases, capped at AED 75.',status:'ACTIVE'},
-    {name:'Loyalty points boost',detail:'2× rewards points during the afternoon and evening period.',status:'ACTIVE'},
-    {name:'New customer welcome',detail:'AED 20 off the first qualifying purchase at this location.',status:'ACTIVE'},
-    {name:'Lunch bundle promotion',detail:'Selected bundle pricing available Monday to Friday, 12–3 PM.',status:'ACTIVE'}
-  ];
-  if(store.id%5===0)return[];
-  const first=offers[store.id%offers.length];
-  return store.id%7===0?[first,offers[(store.id+2)%offers.length]]:[first];
-}
-
 function renderStoreDetail(store,cityShops){
   const detail=document.getElementById('city-store-detail');if(!detail)return;
   const rank=[...cityShops].sort((a,b)=>b.spend-a.spend).findIndex(s=>s.id===store.id)+1;
   const citySpend=cityShops.reduce((n,s)=>n+s.spend,0);
   const share=store.spend/Math.max(1,citySpend)*100;
-  const offers=storeOffers(store);
-  const ages=window.GEO.AGE_BANDS||['18-24','25-34','35-44','45-54','55+'];
-  const months=['Jan','Feb','Mar','Apr','May','Jun'];
-  const trendMax=Math.max(...store.trend,1);
-  detail.innerHTML=`
-    <div class="store-detail-head">
-      <div><h3>${store.brand} — ${store.area}</h3><p>${store.code} · ${store.addr} · ${store.city}</p></div>
-      <span class="store-status">Store active</span>
-    </div>
-    <div class="store-kpis">
-      <div class="store-kpi"><span>Total spend</span><b>${fmtAED(store.spend)}</b></div>
-      <div class="store-kpi"><span>Transactions</span><b>${fmtNum(store.txns)}</b></div>
-      <div class="store-kpi"><span>Customers</span><b>${fmtNum(store.customers)}</b></div>
-      <div class="store-kpi"><span>Average ticket</span><b>${fmtAED(store.avgTicket)}</b></div>
-      <div class="store-kpi"><span>City contribution</span><b>${share.toFixed(1)}%</b></div>
-    </div>
-    <div class="store-detail-grid">
-      <section class="store-section">
-        <h4>Performance &amp; market position</h4>
-        <div class="channel-row"><span>City rank by spend</span><b>#${rank} of ${cityShops.length}</b></div>
-        <div class="channel-row"><span>6-month change</span><b style="color:${store.delta>=0?'#0E8E6D':'#C4453D'}">${store.delta>=0?'+':''}${store.delta.toFixed(1)}%</b></div>
-        <div class="channel-row"><span>Primary customer segment</span><b>${store.segment}</b></div>
-        <div class="channel-row"><span>Most common transaction</span><b>${store.txnType}</b></div>
-      </section>
-      <section class="store-section">
-        <h4>Gender distribution</h4>
-        <div class="demo-split"><span style="width:${store.male}%"></span><span style="width:${store.female}%"></span></div>
-        <div class="demo-legend"><span>Male ${store.male}%</span><span>Female ${store.female}%</span></div>
-        <h4 style="margin-top:19px">Channel mix</h4>
-        <div class="channel-row"><span>In-store</span><b>${100-store.onlineShare}%</b></div>
-        <div class="channel-row"><span>Online / delivery</span><b>${store.onlineShare}%</b></div>
-      </section>
-      <section class="store-section">
-        <h4>Age distribution</h4>
-        ${ages.map((a,i)=>`<div class="age-row2"><span>${a}</span><div class="age-track2"><div class="age-fill2" style="width:${store.age[i]}%"></div></div><b>${store.age[i]}%</b></div>`).join('')}
-      </section>
-      <section class="store-section">
-        <h4>Offers &amp; campaigns</h4>
-        ${offers.length?offers.map(o=>`<div class="offer-card"><div class="offer-top"><b>${o.name}</b><em>${o.status}</em></div><p>${o.detail}</p></div>`).join(''):
-          '<div class="no-offer">No active offers at this store right now.</div>'}
-      </section>
-      <section class="store-section wide">
-        <h4>Six-month performance trend</h4>
-        <div class="store-trend">${store.trend.map((v,i)=>`<div class="store-trend-bar" style="height:${Math.max(18,v/trendMax*100)}%"><span>${months[i]}</span></div>`).join('')}</div>
-      </section>
-    </div>`;
+  detail.innerHTML=window.StoreDetail.renderContent(store,{
+    rank, total:cityShops.length, contrib:share,
+    displaySpend:store.spend,
+    displayTxns:store.txns,
+    displayCustomers:store.customers
+  });
 }
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCityDrilldown();});

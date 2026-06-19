@@ -445,7 +445,7 @@ body{
   top:4vh;
   width:93vw;
   height:92vh;
-  border-radius:22px;
+  border-radius:24px;
   background:#F8FAF9;
   border:1px solid rgba(255,255,255,.65);
   box-shadow:0 24px 70px rgba(16,24,40,.25);
@@ -561,7 +561,7 @@ body{
 .store-kpi span{display:block;font-size:10px;color:var(--muted);}
 .store-kpi b{display:block;font-size:17px;color:var(--ink);margin-top:4px;}
 .store-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.store-section{background:#fff;border:1px solid var(--line);border-radius:15px;padding:16px;min-width:0;}
+.store-section{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0;}
 .store-section.wide{grid-column:1/-1;}
 .store-section h4{font-size:14px;color:var(--logo);margin:0 0 13px;}
 .demo-split{display:flex;height:12px;border-radius:7px;overflow:hidden;margin-bottom:11px;background:var(--inset-2);}
@@ -583,6 +583,22 @@ body{
 .store-trend{display:flex;align-items:flex-end;gap:7px;height:105px;padding-top:8px;}
 .store-trend-bar{flex:1;min-width:16px;background:linear-gradient(#1FA97A,#8BD2B7);border-radius:5px 5px 2px 2px;position:relative;}
 .store-trend-bar span{position:absolute;left:50%;bottom:-19px;transform:translateX(-50%);font-size:9.5px;color:var(--faint);}
+
+/* Age demo block (inside customer demographics section) */
+.age-demo-block{margin-top:14px;}
+
+/* Monthly performance table */
+.monthly-table{margin-top:4px;}
+.mt-head,.mt-row{display:grid;grid-template-columns:44px 1fr 1.4fr 1fr 64px;gap:8px;align-items:center;}
+.mt-head{padding:0 2px 8px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);border-bottom:2px solid var(--line);}
+.mt-row{padding:8px 2px;border-bottom:1px solid var(--line-2);font-size:12px;color:var(--ink-2);}
+.mt-row.last{border-bottom:0;}
+.mt-month{font-weight:600;color:var(--ink);}
+.mom{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:700;padding:3px 7px;border-radius:6px;white-space:nowrap;}
+.mom.up{color:#0B6B52;background:#E6F5EF;}
+.mom.dn{color:#B42318;background:#FEF3F2;}
+.mom-empty{color:var(--faint);font-size:11px;}
+@media(max-width:860px){.mt-head,.mt-row{grid-template-columns:40px 1fr 1.2fr 60px;}.mt-head span:nth-child(4),.mt-row span:nth-child(4){display:none;}}
 
 /* Toast notification */
 .toast{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:600;background:var(--ink);color:#fff;font-size:12.5px;padding:9px 14px;border-radius:8px;opacity:0;transition:.2s;pointer-events:none;}

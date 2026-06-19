@@ -611,17 +611,6 @@ scrim.onclick=closePanel;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
 
 /* ---- SLI helper renderers ---- */
-function sliStoreOffers(s){
-  const offers=[
-    {name:'Weekend cashback',detail:'10% cashback on eligible card purchases, capped at AED 75.',status:'ACTIVE'},
-    {name:'Loyalty points boost',detail:'2× rewards points during the afternoon and evening period.',status:'ACTIVE'},
-    {name:'New customer welcome',detail:'AED 20 off the first qualifying purchase at this location.',status:'ACTIVE'},
-    {name:'Lunch bundle promotion',detail:'Selected bundle pricing available Monday to Friday, 12–3 PM.',status:'ACTIVE'}
-  ];
-  if(s.id%5===0)return[];
-  const first=offers[s.id%offers.length];
-  return s.id%7===0?[first,offers[(s.id+2)%offers.length]]:[first];
-}
 function sliKpi(label,val){
   return `<div class="sli-kpi"><div class="sli-kpi-k">${label}</div><div class="sli-kpi-v">${val}</div></div>`;
 }
@@ -781,51 +770,12 @@ function openBrand(brandId,vis){
     const s=listShops[activeIdx];
     const rank=activeIdx+1;
     const contrib=totalSpend>0?Math.round(s.spend*periodMult()/totalSpend*1000)/10:0;
-    const months=['Jan','Feb','Mar','Apr','May','Jun'];
-    const trendMax=Math.max(...s.trend,1);
-    const offers=sliStoreOffers(s);
-    el.innerHTML=`
-      <div class="store-detail-head">
-        <div><h3>${s.brand} — ${s.area}</h3><p>${s.code} · ${s.addr} · ${s.city}</p></div>
-        <span class="store-status">Store active</span>
-      </div>
-      <div class="store-kpis">
-        <div class="store-kpi"><span>Total spend</span><b>${fmtAED(s.spend*periodMult())}</b></div>
-        <div class="store-kpi"><span>Transactions</span><b>${fmtNum(s.txns*periodMult())}</b></div>
-        <div class="store-kpi"><span>Customers</span><b>${fmtNum(s.customers*periodMult())}</b></div>
-        <div class="store-kpi"><span>Average ticket</span><b>${fmtAED(s.avgTicket)}</b></div>
-        <div class="store-kpi"><span>City contribution</span><b>${contrib.toFixed(1)}%</b></div>
-      </div>
-      <div class="store-detail-grid">
-        <section class="store-section">
-          <h4>Performance &amp; market position</h4>
-          <div class="channel-row"><span>City rank by spend</span><b>#${rank} of ${listShops.length}</b></div>
-          <div class="channel-row"><span>6-month change</span><b style="color:${s.delta>=0?'#0E8E6D':'#C4453D'}">${s.delta>=0?'+':''}${s.delta.toFixed(1)}%</b></div>
-          <div class="channel-row"><span>Primary customer segment</span><b>${s.segment}</b></div>
-          <div class="channel-row"><span>Most common transaction</span><b>${s.txnType}</b></div>
-        </section>
-        <section class="store-section">
-          <h4>Gender distribution</h4>
-          <div class="demo-split"><span style="width:${s.male}%"></span><span style="width:${s.female}%"></span></div>
-          <div class="demo-legend"><span>Male ${s.male}%</span><span>Female ${s.female}%</span></div>
-          <h4 style="margin-top:19px">Channel mix</h4>
-          <div class="channel-row"><span>In-store</span><b>${100-s.onlineShare}%</b></div>
-          <div class="channel-row"><span>Online / delivery</span><b>${s.onlineShare}%</b></div>
-        </section>
-        <section class="store-section">
-          <h4>Age distribution</h4>
-          ${AGE_BANDS.map((a,i)=>`<div class="age-row2"><span>${a}</span><div class="age-track2"><div class="age-fill2" style="width:${s.age[i]}%"></div></div><b>${s.age[i]}%</b></div>`).join('')}
-        </section>
-        <section class="store-section">
-          <h4>Offers &amp; campaigns</h4>
-          ${offers.length?offers.map(o=>`<div class="offer-card"><div class="offer-top"><b>${o.name}</b><em>${o.status}</em></div><p>${o.detail}</p></div>`).join(''):
-            '<div class="no-offer">No active offers at this store right now.</div>'}
-        </section>
-        <section class="store-section wide">
-          <h4>Six-month performance trend</h4>
-          <div class="store-trend">${s.trend.map((v,i)=>`<div class="store-trend-bar" style="height:${Math.max(18,v/trendMax*100)}%"><span>${months[i]}</span></div>`).join('')}</div>
-        </section>
-      </div>`;
+    el.innerHTML=window.StoreDetail.renderContent(s,{
+      rank, total:listShops.length, contrib,
+      displaySpend:s.spend*periodMult(),
+      displayTxns:s.txns*periodMult(),
+      displayCustomers:s.customers*periodMult()
+    });
   }
 
   renderList();
