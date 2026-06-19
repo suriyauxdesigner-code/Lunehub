@@ -37,9 +37,10 @@ const SUBCATS={
 };
 
 /* ---- aggregation ---- */
-function brandAgg(){
+function brandAgg(shops){
+  shops=shops||SHOPS;
   const m={};
-  SHOPS.forEach(s=>{const a=m[s.brandId]||(m[s.brandId]={brand:BRANDS[s.brandId],spend:0,txns:0,customers:0});
+  shops.forEach(s=>{const a=m[s.brandId]||(m[s.brandId]={brand:BRANDS[s.brandId],spend:0,txns:0,customers:0});
     a.spend+=s.spend;a.txns+=s.txns;a.customers+=s.customers;});
   return Object.values(m).map(a=>({...a,
     avgTicket:a.spend/a.txns, spendPerCust:a.spend/a.customers,
@@ -55,6 +56,15 @@ function catAgg(){
 function monthly(seed,total){
   const r=rng(seed);const raw=MONTHS.map(()=>0.55+r());const sum=raw.reduce((a,b)=>a+b,0);
   return raw.map(v=>Math.round(v/sum*total));
+}
+function textSeed(value){
+  return [...String(value||'')].reduce((n,ch)=>((n*31)+ch.charCodeAt(0))|0,0);
+}
+function totals(shops){
+  return shops.reduce((a,s)=>{
+    a.spend+=s.spend;a.txns+=s.txns;a.customers+=s.customers;
+    return a;
+  },{spend:0,txns:0,customers:0});
 }
 
 /* ============================================================ */
@@ -105,7 +115,7 @@ if(page==='categories'){
 if(page==='brand'){
   const id=+qs.get('brand')||0;
   const b=BRANDS[id];
-  const agg=brandAgg().find(x=>x.id===id);
+  const allBrandShops=SHOPS.filter(s=>s.brandId===id);
   document.title='Lune — '+b.name;
   document.getElementById('title').textContent=b.name;
   document.getElementById('subtitle').textContent='Category: '+b.category;
@@ -113,24 +123,37 @@ if(page==='brand'){
   document.getElementById('mono').style.background=b.color;
   const bt=document.getElementById('bar-title'); if(bt)bt.textContent=b.name+': Spend over time';
   const ts=document.getElementById('txn-sub'); if(ts)ts.textContent=b.name+' Transaction Records';
-  kpi('k-spend',fmtAED(agg.spend)); kpi('k-txns',fmtNum(agg.txns));
-  kpi('k-cust',fmtNum(agg.customers)); kpi('k-avg',fmtAED(agg.spendPerCust));
-  const spendSeries=monthly(id*7+1, agg.spend);
-  const txnSeries=monthly(id*13+5, agg.txns);
-  window.Charts.bar(document.getElementById('chart-bar'),spendSeries,MONTHS);
-  window.Charts.area(document.getElementById('chart-area'),txnSeries,MONTHS);
-  // transactions list
-  const r=rng(id*101+3);
-  const cities=[...new Set(SHOPS.filter(s=>s.brandId===id).map(s=>s.city))];
+
+  function renderBrandScope(sc,country){
+    const agg=totals(sc);
+    const seed=textSeed(country);
+    kpi('k-spend',fmtAED(agg.spend)); kpi('k-txns',fmtNum(agg.txns));
+    kpi('k-cust',fmtNum(agg.customers));
+    kpi('k-avg',fmtAED(agg.customers?agg.spend/agg.customers:0));
+    window.Charts.bar(document.getElementById('chart-bar'),monthly(id*7+seed+1,agg.spend),MONTHS);
+    window.Charts.area(document.getElementById('chart-area'),monthly(id*13+seed+5,agg.txns),MONTHS);
+    renderBrandTransactions(sc,country);
+  }
+
+  function renderBrandTransactions(sc,country){
+    const tb=document.getElementById('txn-rows');
+    if(!sc.length){
+      tb.innerHTML='<tr><td colspan="3" class="c-mut">No transactions for this country.</td></tr>';
+      return;
+    }
+    const r=rng(id*101+textSeed(country)+3);
+    tb.innerHTML=Array.from({length:10}).map(()=>{
+      const shop=sc[Math.floor(r()*sc.length)];
+      const cust='CUST-'+(100000+Math.floor(r()*900000));
+      const d=new Date(2025,Math.floor(r()*6)+1,Math.floor(r()*27)+1);
+      const amt=Math.max(1,Math.round(shop.avgTicket*(0.45+r()*1.1)));
+      return `<tr><td>${cust}</td><td class="c-mut">${d.toISOString().slice(0,10)}</td><td class="num">${fmtAED(amt)}</td></tr>`;
+    }).join('');
+  }
+
+  renderBrandScope(allBrandShops,'');
   // location widget
-  locWidget(SHOPS.filter(s=>s.brandId===id), 'brand='+id, b.color);
-  const tb=document.getElementById('txn-rows');
-  tb.innerHTML=Array.from({length:10}).map(()=>{
-    const cust='CUST-'+(100000+Math.floor(r()*900000));
-    const d=new Date(2025,Math.floor(r()*6)+1,Math.floor(r()*27)+1);
-    const amt=Math.round(b.ubiquity*200+r()*9000);
-    return `<tr><td>${cust}</td><td class="c-mut">${d.toISOString().slice(0,10)}</td><td class="num">${fmtAED(amt)}</td></tr>`;
-  }).join('');
+  locWidget(allBrandShops,'brand='+id,b.color,{onScopeChange:renderBrandScope});
 }
 
 /* ---------------- CATEGORY DETAIL ---------------- */
@@ -139,43 +162,47 @@ if(page==='category'){
   document.title='Lune — '+cat;
   document.getElementById('title').textContent=cat;
   const inCat=SHOPS.filter(s=>s.category===cat);
-  const spend=inCat.reduce((a,s)=>a+s.spend,0);
-  const txns=inCat.reduce((a,s)=>a+s.txns,0);
-  const cust=inCat.reduce((a,s)=>a+s.customers,0);
-  const brandIds=[...new Set(inCat.map(s=>s.brandId))];
-  kpi('k-spend',fmtAED(spend)); kpi('k-txns',fmtNum(txns));
-  kpi('k-cust',fmtNum(cust)); kpi('k-brands',fmtNum(brandIds.length));
   document.getElementById('chart-title').textContent=cat+': Spend Over Time';
   document.getElementById('share-title').textContent='Brand Share in '+cat;
   document.getElementById('subcat-title').textContent='Subcategories in '+cat;
   document.getElementById('brands-title').textContent='Brands in '+cat;
-  window.Charts.bar(document.getElementById('chart-bar'),monthly(cat.length*17+2,spend),MONTHS);
-
-  // brand share donut (top brands by spend)
-  const ba=brandAgg().filter(x=>x.category===cat).sort((a,b)=>b.spend-a.spend);
-  const top=ba.slice(0,9);
-  window.Charts.donut(document.getElementById('donut'),top.map(x=>({label:x.name,value:x.spend,color:x.color})));
-  document.getElementById('donut-legend').innerHTML=top.map(x=>
-    `<div class="lg"><span class="d" style="background:${x.color}"></span>${x.name}</div>`).join('');
-
-  // subcategories table
   const subs=SUBCATS[cat]||[];
-  const r=rng(cat.length*31+9);
-  const weights=subs.map(()=>0.4+r());const wsum=weights.reduce((a,b)=>a+b,0);
   document.getElementById('subcat-count').textContent=subs.length+' Subcategories';
-  document.getElementById('subcat-rows').innerHTML=subs.map((sname,i)=>{
-    const sp=spend*weights[i]/wsum, tx=txns*weights[i]/wsum, cu=cust*weights[i]/wsum;
-    return `<tr><td>${sname}</td><td class="num">${fmtAED(sp)}</td><td class="num">${fmtNum(tx)}</td><td class="num">${fmtNum(cu)}</td></tr>`;
-  }).join('');
 
-  // brands table
-  document.getElementById('brands-rows').innerHTML=ba.slice(0,8).map(x=>
-    `<tr data-id="${x.id}"><td class="c-brand"><span class="mono sm" style="background:${x.color}">${x.abbr}</span>${x.name}</td>
-     <td class="num">${fmtAED(x.spend)}</td><td class="num">${fmtNum(x.txns)}</td><td class="num">${fmtNum(x.customers)}</td></tr>`).join('');
-  [...document.querySelectorAll('#brands-rows tr')].forEach(tr=>tr.onclick=()=>location.href='Brand.html?brand='+tr.dataset.id);
+  function renderCategoryScope(sc,country){
+    const agg=totals(sc);
+    const brandIds=[...new Set(sc.map(s=>s.brandId))];
+    const seed=textSeed(country);
+    kpi('k-spend',fmtAED(agg.spend)); kpi('k-txns',fmtNum(agg.txns));
+    kpi('k-cust',fmtNum(agg.customers)); kpi('k-brands',fmtNum(brandIds.length));
+    window.Charts.bar(document.getElementById('chart-bar'),monthly(cat.length*17+seed+2,agg.spend),MONTHS);
 
+    const ba=brandAgg(sc).filter(x=>x.category===cat).sort((a,b)=>b.spend-a.spend);
+    const top=ba.slice(0,9);
+    window.Charts.donut(document.getElementById('donut'),top.map(x=>({label:x.name,value:x.spend,color:x.color})));
+    document.getElementById('donut-legend').innerHTML=top.length?top.map(x=>
+      `<div class="lg"><span class="d" style="background:${x.color}"></span>${x.name}</div>`).join('')
+      :'<div class="c-mut">No brand data for this country.</div>';
+
+    const r=rng(cat.length*31+seed+9);
+    const weights=subs.map(()=>0.4+r());
+    const wsum=weights.reduce((a,b)=>a+b,0)||1;
+    document.getElementById('subcat-rows').innerHTML=subs.map((sname,i)=>{
+      const sp=agg.spend*weights[i]/wsum, tx=agg.txns*weights[i]/wsum, cu=agg.customers*weights[i]/wsum;
+      return `<tr><td>${sname}</td><td class="num">${fmtAED(sp)}</td><td class="num">${fmtNum(tx)}</td><td class="num">${fmtNum(cu)}</td></tr>`;
+    }).join('');
+
+    const brandsRows=document.getElementById('brands-rows');
+    brandsRows.innerHTML=ba.length?ba.slice(0,8).map(x=>
+      `<tr data-id="${x.id}"><td class="c-brand"><span class="mono sm" style="background:${x.color}">${x.abbr}</span>${x.name}</td>
+       <td class="num">${fmtAED(x.spend)}</td><td class="num">${fmtNum(x.txns)}</td><td class="num">${fmtNum(x.customers)}</td></tr>`).join('')
+      :'<tr><td colspan="4" class="c-mut">No brands for this country.</td></tr>';
+    [...brandsRows.querySelectorAll('tr[data-id]')].forEach(tr=>tr.onclick=()=>location.href='Brand.html?brand='+tr.dataset.id);
+  }
+
+  renderCategoryScope(inCat,'');
   // location widget
-  locWidget(inCat, 'cat='+encodeURIComponent(cat), '#13A07B', {showBrand:true});
+  locWidget(inCat,'cat='+encodeURIComponent(cat),'#13A07B',{showBrand:true,onScopeChange:renderCategoryScope});
 }
 
 /* ---- helpers ---- */
@@ -185,6 +212,7 @@ function kpi(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
 function locWidget(allShops, deepLink, accent, opts){
   opts=opts||{};
   const showBrand=!!opts.showBrand;
+  const onScopeChange=opts.onScopeChange;
   const mapEl=document.getElementById('loc-map'); if(!mapEl)return;
   const countries=[...new Set(allShops.map(s=>s.country))].sort();
   let selCountry='';
@@ -207,6 +235,7 @@ function locWidget(allShops, deepLink, accent, opts){
 
   function refit(){
     const sc=scope();
+    if(onScopeChange)onScopeChange(sc,selCountry);
     if(!sc.length){render();return;}
     if(selCountry){
       const grp=L.featureGroup(sc.map(s=>L.marker([s.lat,s.lng])));
