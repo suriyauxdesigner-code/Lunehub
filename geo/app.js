@@ -604,8 +604,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();});
    DETAIL PANEL
    ============================================================ */
 const panel=document.getElementById('panel'), scrim=document.getElementById('scrim');
-function openPanel(){panel.classList.add('open');panel.style.transform='translateX(0)';scrim.classList.add('open');}
-function closePanel(){panel.classList.remove('open','wide');panel.style.transform='';scrim.classList.remove('open');}
+function openPanel(){panel.classList.add('open');scrim.classList.add('open');}
+function closePanel(){panel.classList.remove('open','wide','modal');panel.style.transform='';scrim.classList.remove('open');}
 window.closePanel=closePanel;
 scrim.onclick=closePanel;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
@@ -690,20 +690,28 @@ function openShop(s){
 }
 function openBrand(brandId,vis){
   const b=brandById(brandId);
-  const allShops=vis.filter(s=>s.brandId===brandId).sort((a,x)=>x.spend-a.spend);
-  if(!allShops.length)return;
+  const m=METRICS[state.metric];
 
-  /* primary city = highest aggregate spend */
-  const citySpend={};
-  allShops.forEach(s=>citySpend[s.city]=(citySpend[s.city]||0)+s.spend*periodMult());
-  const primaryCity=Object.entries(citySpend).sort((a,x)=>x[1]-a[1])[0][0];
-  const primaryCountry=allShops.find(s=>s.city===primaryCity)?.country||'';
+  /* all visible stores for this brand, sorted by current metric */
+  const listShops=vis.filter(s=>s.brandId===brandId).sort((a,x)=>shopVal(x)-shopVal(a));
+  if(!listShops.length)return;
 
-  /* use shops in primary city for the list; fall back to all if only one city */
-  const cityShops=allShops.filter(s=>s.city===primaryCity);
-  const listShops=cityShops.length?cityShops:allShops;
+  /* context title: city → country → brand name depending on spread */
+  const uniqueCities=[...new Set(listShops.map(s=>s.city))];
+  const uniqueCountries=[...new Set(listShops.map(s=>s.country))];
+  let displayTitle,displaySub;
+  if(uniqueCities.length===1){
+    displayTitle=uniqueCities[0];
+    displaySub=listShops[0].country+' · '+listShops.length+' store'+(listShops.length===1?'':'s');
+  }else if(uniqueCountries.length===1){
+    displayTitle=uniqueCountries[0];
+    displaySub=uniqueCities.length+' cities · '+listShops.length+' stores';
+  }else{
+    displayTitle=b.name;
+    displaySub=uniqueCountries.length+' countries · '+listShops.length+' stores in view';
+  }
 
-  /* city-level aggregates */
+  /* view-level aggregates */
   const totalSpend=listShops.reduce((x,s)=>x+s.spend*periodMult(),0);
   const totalTxns=listShops.reduce((x,s)=>x+s.txns*periodMult(),0);
   const totalCust=listShops.reduce((x,s)=>x+s.customers*periodMult(),0);
@@ -711,15 +719,15 @@ function openBrand(brandId,vis){
 
   const offer=CAT_OFFERS[b.category]||{title:'Loyalty rewards offer',desc:'Exclusive offers available for all cardholders this month.'};
 
-  panel.className='panel wide';
+  panel.className='panel wide modal';
   panel.innerHTML=`
     <div class="sli-panel">
       <div class="sli-head">
         <div class="sli-label">Store-level Intelligence</div>
         <div class="sli-city-row">
           <div>
-            <h2 class="sli-city">${primaryCity}</h2>
-            <div class="sli-head-sub">${primaryCountry} · ${listShops.length} store${listShops.length===1?'':'s'}</div>
+            <h2 class="sli-city">${displayTitle}</h2>
+            <div class="sli-head-sub">${displaySub}</div>
           </div>
           <button class="sli-head-close" onclick="closePanel()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -727,15 +735,15 @@ function openBrand(brandId,vis){
         </div>
       </div>
       <div class="sli-kpis">
-        ${sliKpi('Total city spend',fmtAED(totalSpend))}
+        ${sliKpi('Total spend',fmtAED(totalSpend))}
         ${sliKpi('Transactions',fmtNum(totalTxns))}
         ${sliKpi('Customers',fmtNum(totalCust))}
-        ${sliKpi('Average ticket',fmtAED(avgTicket))}
-        ${sliKpi('Store count',listShops.length)}
+        ${sliKpi('Avg ticket',fmtAED(avgTicket))}
+        ${sliKpi('Stores in view',listShops.length)}
       </div>
       <div class="sli-body">
         <div class="sli-stores">
-          <div class="sli-stores-head">Stores (${listShops.length})</div>
+          <div class="sli-stores-head">Stores (${listShops.length}) <span class="sli-sort-hint">by ${m.short.toLowerCase()}</span></div>
           <div class="sli-list" id="sli-list"></div>
         </div>
         <div class="sli-detail" id="sli-detail"></div>
@@ -747,20 +755,25 @@ function openBrand(brandId,vis){
   function renderList(){
     const el=document.getElementById('sli-list');
     if(!el)return;
-    el.innerHTML=listShops.map((s,i)=>`
-      <div class="sli-store-row${i===activeIdx?' active':''}" data-i="${i}">
+    el.innerHTML=listShops.map((s,i)=>{
+      const val=shopVal(s);
+      const valStr=state.metric==='avgTicket'?fmtAED(val):state.metric==='spend'?fmtAED(val):fmtNum(val);
+      const txnStr=fmtNum(s.txns*periodMult())+' txns';
+      return `<div class="sli-store-row${i===activeIdx?' active':''}" data-i="${i}">
         <div class="sli-sr-mk" style="background:${s.color}">${s.abbr}</div>
         <div class="sli-sr-mid">
           <div class="sli-sr-name">${s.area}</div>
-          <div class="sli-sr-code">${s.code} · ${s.addr}</div>
+          <div class="sli-sr-code">${s.code} · ${s.city}</div>
         </div>
         <div class="sli-sr-val">
-          <div class="sli-sr-amt">${fmtAED(s.spend*periodMult())}</div>
-          <div class="sli-sr-txns">${fmtNum(s.txns*periodMult())} txns</div>
+          <div class="sli-sr-amt">${valStr}</div>
+          <div class="sli-sr-txns">${txnStr}</div>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
     el.querySelectorAll('.sli-store-row').forEach(row=>{
-      row.onclick=()=>{activeIdx=+row.dataset.i;renderList();renderDetail();};
+      row.onclick=()=>{activeIdx=+row.dataset.i;renderList();renderDetail();
+        const s=listShops[activeIdx];map.flyTo([s.lat,s.lng],Math.max(map.getZoom(),10),{duration:.5});};
     });
   }
 
@@ -768,7 +781,7 @@ function openBrand(brandId,vis){
     const el=document.getElementById('sli-detail');
     if(!el)return;
     const s=listShops[activeIdx];
-    const cityRank=activeIdx+1;
+    const rank=activeIdx+1;
     const contrib=totalSpend>0?Math.round(s.spend*periodMult()/totalSpend*1000)/10:0;
     const inStore=100-s.onlineShare;
     const deltaSign=s.delta>=0;
@@ -785,14 +798,14 @@ function openBrand(brandId,vis){
         ${sliSkpi('Transactions',fmtNum(s.txns*periodMult()))}
         ${sliSkpi('Customers',fmtNum(s.customers*periodMult()))}
         ${sliSkpi('Average ticket',fmtAED(s.avgTicket))}
-        ${sliSkpi('City contribution',contrib+'%')}
+        ${sliSkpi('View contribution',contrib+'%')}
       </div>
       <div class="sli-detail-body">
         <div class="sli-two-col">
           <div class="sli-card">
             <h4>Performance &amp; market position</h4>
             <div class="sli-rows">
-              <div class="sli-row"><span>City rank by spend</span><b>#${cityRank} of ${listShops.length}</b></div>
+              <div class="sli-row"><span>Rank in view</span><b>#${rank} of ${listShops.length}</b></div>
               <div class="sli-row"><span>6-month change</span><b class="${deltaSign?'pos':'neg'}">${deltaSign?'+':''}${s.delta}%</b></div>
               <div class="sli-row"><span>Primary customer segment</span><b>${s.segment}</b></div>
               <div class="sli-row"><span>Most common transaction</span><b>${s.txnType}</b></div>
@@ -831,9 +844,6 @@ function openBrand(brandId,vis){
   renderList();
   renderDetail();
   openPanel();
-
-  const grp=L.featureGroup(listShops.map(s=>L.marker([s.lat,s.lng])));
-  map.fitBounds(grp.getBounds().pad(.25),{duration:.5});
 }
 
 /* ============================================================

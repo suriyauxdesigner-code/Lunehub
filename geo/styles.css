@@ -433,9 +433,27 @@ body{
 .tip .open{margin-top:7px;font-size:12px;font-weight:600;color:var(--green-ink);cursor:pointer;}
 
 /* ============================================================
-   Store-Level Intelligence panel (wide brand panel)
+   Store-Level Intelligence panel — centered modal variant
    ============================================================ */
 .panel.wide{width:min(980px,94vw);}
+
+/* modal: centered dialog instead of right-side drawer */
+.panel.modal{
+  right:auto;
+  left:50%;
+  top:50%;
+  width:min(980px,94vw);
+  height:min(90vh,860px);
+  border-radius:16px;
+  box-shadow:0 24px 64px rgba(16,24,40,.28), 0 0 0 1px rgba(16,24,40,.06);
+  transform:translate(-50%,-54%) scale(0.97);
+  opacity:0;
+  transition:transform .22s cubic-bezier(.4,0,.2,1), opacity .18s ease;
+}
+.panel.modal.open{
+  transform:translate(-50%,-50%) scale(1);
+  opacity:1;
+}
 .sli-panel{display:flex;flex-direction:column;height:100%;overflow:hidden;}
 
 /* header */
@@ -459,7 +477,8 @@ body{
 
 /* stores list */
 .sli-stores{width:296px;flex:none;border-right:1px solid var(--line-2);display:flex;flex-direction:column;overflow:hidden;background:#fff;}
-.sli-stores-head{padding:13px 18px 10px;font-size:11.5px;font-weight:600;color:var(--ink-2);flex:none;border-bottom:1px solid var(--line-2);}
+.sli-stores-head{padding:13px 18px 10px;font-size:11.5px;font-weight:600;color:var(--ink-2);flex:none;border-bottom:1px solid var(--line-2);display:flex;align-items:center;gap:6px;}
+.sli-sort-hint{font-size:10.5px;font-weight:500;color:var(--faint);margin-left:auto;}
 .sli-list{flex:1;overflow-y:auto;}
 .sli-store-row{display:flex;align-items:center;gap:11px;padding:11px 18px;cursor:pointer;border-left:3px solid transparent;transition:.1s;}
 .sli-store-row:hover{background:var(--inset);}
