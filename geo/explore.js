@@ -309,15 +309,17 @@ function renderCategoryGeoDetails(shops,country,category){
   const shares=rows.map(c=>c.spend/Math.max(1,totalSpend));
   const top3=[...rows].sort((a,b)=>b.spend-a.spend).slice(0,3).reduce((n,c)=>n+c.spend,0)/Math.max(1,totalSpend);
   const hhi=Math.round(shares.reduce((n,s)=>n+s*s,0)*10000);
-  const whitespace=[...rows].map(c=>({...c,spaceScore:c.txnsPerStore/Math.max(1,c.brandCount)}))
+  const concentrationLevel=hhi<1000?'Low':hhi<1800?'Moderate':'High';
+  const opportunities=[...rows].map(c=>({...c,spaceScore:c.txnsPerStore/Math.max(1,c.brandCount)}))
     .sort((a,b)=>b.spaceScore-a.spaceScore).slice(0,4);
   concentration.innerHTML=`
     <div class="summary-strip">
-      <div class="summary-stat"><span>Top 3 city share</span><b>${Math.round(top3*100)}%</b></div>
-      <div class="summary-stat"><span>Concentration index</span><b>${fmtNum(hhi)}</b></div>
+      <div class="summary-stat"><span>Spend in top 3 cities</span><b>${Math.round(top3*100)}%</b></div>
+      <div class="summary-stat"><span>Spend concentration</span><b>${concentrationLevel}</b></div>
       <div class="summary-stat"><span>Active cities</span><b>${rows.length}</b></div>
     </div>`+
-    whitespace.map(c=>`<div class="metric-list-row"><div class="place">${c.city}<small>${c.brandCount} brands · ${fmtNum(c.txnsPerStore)} txns/location</small></div><span class="region-state under">WHITESPACE</span><div class="metric">${fmtAED(c.spend)}<small>category spend</small></div></div>`).join('');
+    opportunities.map((c,i)=>`<div class="metric-list-row"><div class="place">${c.city}<small>${fmtNum(c.txnsPerStore)} txns/location · ${c.brandCount} active brands</small></div><span class="region-state under">${i<2?'HIGH':'MEDIUM'} OPPORTUNITY</span><div class="metric">${fmtAED(c.spend)}<small>category demand</small></div></div>`).join('')+
+    '<div class="insight-name" style="margin-top:12px"><small>Opportunity indicates comparatively high transaction demand per location and per active brand. It does not mean the city has no existing coverage.</small></div>';
 
   avgTicket.innerHTML=[...rows].sort((a,b)=>b.avgTicket-a.avgTicket).slice(0,6).map(c=>`
     <div class="metric-list-row">
@@ -396,7 +398,7 @@ function renderGeoInsights(shops,country,baseSeed,accent,kind){
       <div class="opp-copy"><b>${c.city}</b><span>${c.stores} location${c.stores===1?'':'s'} · ${fmtNum(c.txns/c.stores)} txns/store</span></div>
       <span class="opp-growth">+${c.growth.toFixed(1)}%</span>
     </div>`).join('')+
-    `<div class="insight-name" style="margin-top:12px"><small>${kind==='brand'?'Opportunity combines demand, growth and current store coverage.':'Whitespace combines category demand, growth and brand coverage.'}</small></div>`;
+    `<div class="insight-name" style="margin-top:12px"><small>${kind==='brand'?'Opportunity combines demand, growth and current store coverage.':'Opportunity combines category demand, growth and current brand coverage.'}</small></div>`;
 
   const r=rng(seed+991);
   const weightedOnline=shops.reduce((n,s)=>n+s.onlineShare*s.customers,0)/Math.max(1,shops.reduce((n,s)=>n+s.customers,0));
