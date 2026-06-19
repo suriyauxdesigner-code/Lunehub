@@ -92,12 +92,26 @@
 
         <section class="advanced-geo-grid">
           <article class="advanced-geo-card"><div class="advanced-head"><h3>Spend &amp; Transactions per Store</h3><p>Store productivity by city</p></div><div id="brand-store-productivity"></div></article>
-          <article class="advanced-geo-card"><div class="advanced-head"><h3>Underperforming &amp; Underserved Regions</h3><p>Low productivity and expansion whitespace</p></div><div id="brand-underserved"></div></article>
+          <article class="advanced-geo-card"><div class="advanced-head"><h3>Underperforming &amp; Underserved Regions</h3><p>Low productivity and gaps in current store coverage</p></div><div id="brand-underserved"></div></article>
           <article class="advanced-geo-card wide"><div class="advanced-head"><h3>Weekday &amp; Time-of-Day Patterns</h3><p>Estimated transaction intensity by city</p></div><div id="brand-dayparts"></div></article>
         </section>
       </section>
     </div>
   </main>
+</div>
+<div class="city-modal" id="city-modal" aria-hidden="true">
+  <div class="city-modal-scrim" data-city-close></div>
+  <section class="city-modal-panel" role="dialog" aria-modal="true" aria-labelledby="city-modal-title">
+    <header class="city-modal-head">
+      <div><span class="city-modal-kicker">Store-level intelligence</span><h2 id="city-modal-title">City stores</h2><p id="city-modal-sub"></p></div>
+      <button class="city-modal-close" type="button" data-city-close aria-label="Close">×</button>
+    </header>
+    <div id="city-modal-kpis" class="city-modal-kpis"></div>
+    <div class="city-modal-body">
+      <aside class="city-store-list"><div class="city-store-list-head">Stores <span id="city-store-count"></span></div><div id="city-store-rows"></div></aside>
+      <div class="city-store-detail" id="city-store-detail"></div>
+    </div>
+  </section>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="geo/data.js"></script>

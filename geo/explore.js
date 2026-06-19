@@ -349,6 +349,116 @@ function renderCategoryGeoDetails(shops,country,category){
     </div>`).join('');
 }
 
+function openCityDrilldown(shops,city,selectedStoreId,showBrand){
+  const modal=document.getElementById('city-modal'); if(!modal)return;
+  const cityShops=shops.filter(s=>s.city===city).sort((a,b)=>b.spend-a.spend);
+  if(!cityShops.length)return;
+  const agg=totals(cityShops);
+  const avgTicket=agg.spend/Math.max(1,agg.txns);
+  const brands=new Set(cityShops.map(s=>s.brandId));
+  document.getElementById('city-modal-title').textContent=city;
+  document.getElementById('city-modal-sub').textContent=cityShops[0].country+' · '+cityShops.length+' store'+(cityShops.length===1?'':'s')+
+    (showBrand?' · '+brands.size+' brand'+(brands.size===1?'':'s'):'');
+  document.getElementById('city-store-count').textContent='('+cityShops.length+')';
+  document.getElementById('city-modal-kpis').innerHTML=[
+    ['Total city spend',fmtAED(agg.spend)],
+    ['Transactions',fmtNum(agg.txns)],
+    ['Customers',fmtNum(agg.customers)],
+    ['Average ticket',fmtAED(avgTicket)],
+    [showBrand?'Active brands':'Store count',showBrand?fmtNum(brands.size):fmtNum(cityShops.length)]
+  ].map(x=>`<div class="city-mini-kpi"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('');
+
+  const rows=document.getElementById('city-store-rows');
+  rows.innerHTML=cityShops.map(s=>`
+    <button class="store-select" type="button" data-store-id="${s.id}">
+      <span class="store-select-mark" style="background:${s.color}">${s.abbr}</span>
+      <span class="store-select-copy"><b>${showBrand?s.brand+' · ':''}${s.area}</b><span>${s.code} · ${s.addr}</span></span>
+      <span class="store-select-value">${fmtAED(s.spend)}<span>${fmtNum(s.txns)} txns</span></span>
+    </button>`).join('');
+
+  function selectStore(id){
+    const store=cityShops.find(s=>s.id===id)||cityShops[0];
+    rows.querySelectorAll('.store-select').forEach(el=>el.classList.toggle('active',+el.dataset.storeId===store.id));
+    renderStoreDetail(store,cityShops);
+  }
+  rows.querySelectorAll('.store-select').forEach(el=>el.onclick=()=>selectStore(+el.dataset.storeId));
+  modal.querySelectorAll('[data-city-close]').forEach(el=>el.onclick=closeCityDrilldown);
+  modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.classList.add('modal-open');
+  selectStore(selectedStoreId==null?cityShops[0].id:+selectedStoreId);
+}
+
+function closeCityDrilldown(){
+  const modal=document.getElementById('city-modal');if(!modal)return;
+  modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.classList.remove('modal-open');
+}
+
+function storeOffers(store){
+  const offers=[
+    {name:'Weekend cashback',detail:'10% cashback on eligible card purchases, capped at AED 75.',status:'ACTIVE'},
+    {name:'Loyalty points boost',detail:'2× rewards points during the afternoon and evening period.',status:'ACTIVE'},
+    {name:'New customer welcome',detail:'AED 20 off the first qualifying purchase at this location.',status:'ACTIVE'},
+    {name:'Lunch bundle promotion',detail:'Selected bundle pricing available Monday to Friday, 12–3 PM.',status:'ACTIVE'}
+  ];
+  if(store.id%5===0)return[];
+  const first=offers[store.id%offers.length];
+  return store.id%7===0?[first,offers[(store.id+2)%offers.length]]:[first];
+}
+
+function renderStoreDetail(store,cityShops){
+  const detail=document.getElementById('city-store-detail');if(!detail)return;
+  const rank=[...cityShops].sort((a,b)=>b.spend-a.spend).findIndex(s=>s.id===store.id)+1;
+  const citySpend=cityShops.reduce((n,s)=>n+s.spend,0);
+  const share=store.spend/Math.max(1,citySpend)*100;
+  const offers=storeOffers(store);
+  const ages=window.GEO.AGE_BANDS||['18-24','25-34','35-44','45-54','55+'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun'];
+  const trendMax=Math.max(...store.trend,1);
+  detail.innerHTML=`
+    <div class="store-detail-head">
+      <div><h3>${store.brand} — ${store.area}</h3><p>${store.code} · ${store.addr} · ${store.city}</p></div>
+      <span class="store-status">Store active</span>
+    </div>
+    <div class="store-kpis">
+      <div class="store-kpi"><span>Total spend</span><b>${fmtAED(store.spend)}</b></div>
+      <div class="store-kpi"><span>Transactions</span><b>${fmtNum(store.txns)}</b></div>
+      <div class="store-kpi"><span>Customers</span><b>${fmtNum(store.customers)}</b></div>
+      <div class="store-kpi"><span>Average ticket</span><b>${fmtAED(store.avgTicket)}</b></div>
+      <div class="store-kpi"><span>City contribution</span><b>${share.toFixed(1)}%</b></div>
+    </div>
+    <div class="store-detail-grid">
+      <section class="store-section">
+        <h4>Performance &amp; market position</h4>
+        <div class="channel-row"><span>City rank by spend</span><b>#${rank} of ${cityShops.length}</b></div>
+        <div class="channel-row"><span>6-month change</span><b style="color:${store.delta>=0?'#0E8E6D':'#C4453D'}">${store.delta>=0?'+':''}${store.delta.toFixed(1)}%</b></div>
+        <div class="channel-row"><span>Primary customer segment</span><b>${store.segment}</b></div>
+        <div class="channel-row"><span>Most common transaction</span><b>${store.txnType}</b></div>
+      </section>
+      <section class="store-section">
+        <h4>Gender distribution</h4>
+        <div class="demo-split"><span style="width:${store.male}%"></span><span style="width:${store.female}%"></span></div>
+        <div class="demo-legend"><span>Male ${store.male}%</span><span>Female ${store.female}%</span></div>
+        <h4 style="margin-top:19px">Channel mix</h4>
+        <div class="channel-row"><span>In-store</span><b>${100-store.onlineShare}%</b></div>
+        <div class="channel-row"><span>Online / delivery</span><b>${store.onlineShare}%</b></div>
+      </section>
+      <section class="store-section">
+        <h4>Age distribution</h4>
+        ${ages.map((a,i)=>`<div class="age-row2"><span>${a}</span><div class="age-track2"><div class="age-fill2" style="width:${store.age[i]}%"></div></div><b>${store.age[i]}%</b></div>`).join('')}
+      </section>
+      <section class="store-section">
+        <h4>Offers &amp; campaigns</h4>
+        ${offers.length?offers.map(o=>`<div class="offer-card"><div class="offer-top"><b>${o.name}</b><em>${o.status}</em></div><p>${o.detail}</p></div>`).join(''):
+          '<div class="no-offer">No active offers at this store right now.</div>'}
+      </section>
+      <section class="store-section wide">
+        <h4>Six-month performance trend</h4>
+        <div class="store-trend">${store.trend.map((v,i)=>`<div class="store-trend-bar" style="height:${Math.max(18,v/trendMax*100)}%"><span>${months[i]}</span></div>`).join('')}</div>
+      </section>
+    </div>`;
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCityDrilldown();});
+
 function renderGeoInsights(shops,country,baseSeed,accent,kind){
   const perf=document.getElementById('geo-performance');
   const opp=document.getElementById('geo-opportunities');
@@ -470,16 +580,18 @@ function locWidget(allShops, deepLink, accent, opts){
       const max=Math.max(1,...vis.map(s=>s.spend));
       vis.forEach(s=>{const t=Math.sqrt(s.spend/max);const size=Math.round(12+t*18);
         L.marker([s.lat,s.lng],{icon:bubble(t,size)}).addTo(layer)
-         .bindTooltip(`<b>${showBrand?s.brand:s.area}</b><br>${showBrand?s.area+' · ':''}${s.code} · ${fmtAED(s.spend)}`,{direction:'top',offset:[0,-4]});});
+         .bindTooltip(`<b>${showBrand?s.brand:s.area}</b><br>${showBrand?s.area+' · ':''}${s.code} · ${fmtAED(s.spend)}`,{direction:'top',offset:[0,-4]})
+         .on('click',()=>openCityDrilldown(sc,s.city,s.id,showBrand));});
       const rows=[...vis].sort((a,b)=>b.spend-a.spend).slice(0,6);
       list.innerHTML=rows.length?rows.map((s,i)=>`
-        <a class="loc-row" href="Geolocation Analytics.html?${dl()}">
+        <button class="loc-row" type="button" data-store="${s.id}">
           <span class="loc-rk">${i+1}</span>
           <span class="loc-bar-wrap"><span class="loc-nm">${showBrand?'<span class="loc-dot" style="background:'+s.color+'"></span>':''}${showBrand?s.brand:s.area}<small>${showBrand?s.area+' · '+s.code:s.code+' · '+s.city}</small></span>
             <span class="loc-track"><span class="loc-fill" style="width:${Math.max(5,s.spend/max*100)}%;background:${showBrand?s.color:accent}"></span></span></span>
           <span class="loc-v">${fmtAED(s.spend)}<small>${fmtNum(s.txns)} txns</small></span>
-        </a>`).join('')
+        </button>`).join('')
         :`<div class="loc-empty">No stores in view — zoom out a little.</div>`;
+      rows.forEach(s=>{const el=list.querySelector(`[data-store="${s.id}"]`);if(el)el.onclick=()=>openCityDrilldown(sc,s.city,s.id,showBrand);});
       if(sub)sub.textContent=vis.length+' store'+(vis.length===1?'':'s')+' in view'+(selCountry?' · '+selCountry:'');
     }else{
       const m={};
@@ -489,14 +601,16 @@ function locWidget(allShops, deepLink, accent, opts){
       const max=cities.length?cities[0].spend:1;
       cities.forEach(c=>{const t=Math.sqrt(c.spend/max);const size=Math.round(11+t*22);
         L.marker([c.lat,c.lng],{icon:bubble(t,size)}).addTo(layer)
-         .bindTooltip(`<b>${c.city}</b><br>${c.n} stores · ${fmtAED(c.spend)}`,{direction:'top',offset:[0,-4]});});
+         .bindTooltip(`<b>${c.city}</b><br>${c.n} stores · ${fmtAED(c.spend)}`,{direction:'top',offset:[0,-4]})
+         .on('click',()=>openCityDrilldown(sc,c.city,null,showBrand));});
       list.innerHTML=cities.slice(0,6).map((c,i)=>`
-        <a class="loc-row" href="Geolocation Analytics.html?${dl()}">
+        <button class="loc-row" type="button" data-city="${encodeURIComponent(c.city)}">
           <span class="loc-rk">${i+1}</span>
           <span class="loc-bar-wrap"><span class="loc-nm">${c.city}<small>${c.country}</small></span>
             <span class="loc-track"><span class="loc-fill" style="width:${Math.max(5,c.spend/max*100)}%;background:${accent}"></span></span></span>
           <span class="loc-v">${fmtAED(c.spend)}<small>${c.n} stores</small></span>
-        </a>`).join('');
+        </button>`).join('');
+      list.querySelectorAll('[data-city]').forEach(el=>el.onclick=()=>openCityDrilldown(sc,decodeURIComponent(el.dataset.city),null,showBrand));
       if(sub)sub.textContent=cities.length+' cit'+(cities.length===1?'y':'ies')+' · '+sc.length+' stores'+(selCountry?' · '+selCountry:'');
     }
     if(cta)cta.href='Geolocation Analytics.html?'+dl();
